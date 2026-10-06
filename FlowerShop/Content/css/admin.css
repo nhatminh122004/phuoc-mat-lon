@@ -1,0 +1,198 @@
+/* ==========================================================================
+   FLOWER BOUTIQUE - ADMIN PORTAL STYLES
+   ========================================================================== */
+
+:root {
+    --admin-primary: #c84b61;
+    --admin-dark: #1e191a;
+    --admin-sidebar: #282123;
+    --admin-bg: #f4eff1;
+    --admin-card: #ffffff;
+    --admin-border: #e8dcdf;
+    --admin-text: #332a2c;
+    --admin-text-muted: #827376;
+}
+
+body.admin-body {
+    background: var(--admin-bg);
+    color: var(--admin-text);
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    display: flex;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+.admin-sidebar {
+    width: 260px;
+    background: var(--admin-sidebar);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    z-index: 100;
+}
+.admin-brand {
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.admin-brand i {
+    font-size: 1.8rem;
+    color: var(--admin-primary);
+}
+.admin-brand h2 {
+    color: #fff;
+    font-size: 1.25rem;
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+}
+.admin-menu {
+    list-style: none;
+    padding: 20px 12px;
+    margin: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.admin-menu a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    color: #c9bec0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.admin-menu a:hover, .admin-menu a.active {
+    background: rgba(200, 75, 97, 0.18);
+    color: #fff;
+}
+.admin-menu a i {
+    font-size: 1.15rem;
+    width: 24px;
+    text-align: center;
+    color: var(--admin-primary);
+}
+
+/* MAIN CONTENT */
+.admin-main {
+    margin-left: 260px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.admin-topbar {
+    height: 70px;
+    background: #fff;
+    border-bottom: 1px solid var(--admin-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+}
+.admin-content {
+    padding: 32px;
+    flex: 1;
+}
+
+/* METRIC CARDS */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+.metric-card {
+    background: #fff;
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid var(--admin-border);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.metric-title {
+    font-size: 0.85rem;
+    color: var(--admin-text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.metric-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--admin-dark);
+}
+.metric-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+.metric-primary { background: #feecef; color: var(--admin-primary); }
+.metric-success { background: #e8f5e9; color: #2e7d32; }
+.metric-warning { background: #fff8e1; color: #f57f17; }
+.metric-info { background: #e1f5fe; color: #0288d1; }
+
+/* DATA TABLES */
+.admin-card-box {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid var(--admin-border);
+    padding: 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+.table-responsive {
+    overflow-x: auto;
+}
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+.admin-table th {
+    background: #faf6f7;
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--admin-text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--admin-border);
+}
+.admin-table td {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--admin-border);
+    font-size: 0.92rem;
+    vertical-align: middle;
+}
+.admin-table tr:hover td {
+    background: #fdfafb;
+}
+
+/* BADGES */
+.status-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.pill-pending { background: #fff3e0; color: #e65100; }
+.pill-confirmed { background: #e3f2fd; color: #1565c0; }
+.pill-arranging { background: #f3e5f5; color: #7b1fa2; }
+.pill-shipping { background: #e0f2f1; color: #00695c; }
+.pill-delivered { background: #e8f5e9; color: #2e7d32; }
+.pill-cancelled { background: #ffebee; color: #c62828; }

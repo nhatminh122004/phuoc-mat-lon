@@ -1,0 +1,100 @@
+@model FlowerShop.Models.Entities.Order
+@{
+    ViewBag.Title = "Thanh Toán Thẻ Quốc Tế Stripe - Bloom & Grace";
+}
+
+<div class="section" style="padding-top: 50px; max-width: 650px;">
+    <div style="background: #fff; border: 1px solid var(--border); border-radius: 24px; padding: 40px; box-shadow: var(--shadow-md);">
+        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 24px;">
+            <i class="fa-brands fa-stripe" style="font-size: 3rem; color: #635bff;"></i>
+            <div>
+                <h1 class="font-serif" style="font-size: 1.6rem; margin: 0;">Thanh Toán Thẻ Quốc Tế</h1>
+                <p style="color: var(--text-muted); margin: 0; font-size: 0.88rem;">Bảo mật chuẩn PCI-DSS Level 1 với 3D Secure OTP</p>
+            </div>
+        </div>
+
+        <div style="background: var(--bg-body); padding: 18px; border-radius: 12px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 0.82rem; color: #888;">Mã đơn: <strong>@Model.OrderCode</strong></div>
+                <div style="font-size: 0.88rem; font-weight: 600;">Người nhận: @Model.RecipientName</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 1.4rem; font-weight: 700; color: var(--primary);">@Model.TotalAmount.ToString("N0") đ</div>
+                <div style="font-size: 0.8rem; color: #888;">(~ @((Model.TotalAmount / 25000m).ToString("F2")) USD)</div>
+            </div>
+        </div>
+
+        <!-- Stripe Elements Form -->
+        <form id="stripePaymentForm">
+            <div style="margin-bottom: 20px;">
+                <label style="font-size: 0.88rem; font-weight: 600; display: block; margin-bottom: 8px;">Thông tin Thẻ Tín dụng / Ghi nợ (Visa, Master, JCB, Amex):</label>
+                <div id="cardElement" style="background: #fff; padding: 14px; border: 1px solid var(--border); border-radius: 10px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);"></div>
+                <div id="cardErrors" style="color: #c62828; font-size: 0.82rem; margin-top: 8px;"></div>
+            </div>
+
+            <button type="submit" id="submitStripeBtn" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1rem; background: #635bff;">
+                <i class="fa-solid fa-lock"></i> Xác Nhận Thanh Toán An Toàn
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: #888;">
+            <i class="fa-solid fa-shield-halved"></i> Thông tin thẻ của bạn được mã hóa an toàn và xử lý trực tiếp bởi Stripe Inc.
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        const stripe = Stripe('@ViewBag.PublishableKey');
+        const elements = stripe.elements();
+        const cardElement = elements.create('card', {
+            style: {
+                base: {
+                    fontSize: '16px',
+                    color: '#32325d',
+                    fontFamily: '"Plus Jakarta Sans", sans-serif',
+                    '::placeholder': { color: '#aab7c4' },
+                },
+                invalid: { color: '#fa755a', iconColor: '#fa755a' }
+            }
+        });
+        cardElement.mount('#cardElement');
+
+        const form = document.getElementById('stripePaymentForm');
+        const submitBtn = document.getElementById('submitStripeBtn');
+        const cardErrors = document.getElementById('cardErrors');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xác thực với ngân hàng...';
+
+            const { paymentIntent, error } = await stripe.confirmCardPayment('@ViewBag.ClientSecret', {
+                payment_method: { card: cardElement }
+            });
+
+            if (error) {
+                cardErrors.textContent = error.message;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Xác Nhận Thanh Toán An Toàn';
+            } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+                // Xác nhận về backend
+                fetch('/Payment/StripeConfirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `orderCode=@Model.OrderCode&paymentIntentId=${paymentIntent.id}`
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirectUrl;
+                    } else {
+                        cardErrors.textContent = data.message;
+                        submitBtn.disabled = false;
+                    }
+                });
+            }
+        });
+    </script>
+}

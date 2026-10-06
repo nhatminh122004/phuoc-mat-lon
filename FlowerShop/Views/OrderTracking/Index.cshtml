@@ -1,0 +1,147 @@
+@model FlowerShop.Models.ViewModels.OrderTrackingViewModel
+@{
+    ViewBag.Title = "Tra Cứu Vận Đơn Hoa & Xem Ảnh Thực Tế - Bloom & Grace";
+}
+
+<div class="section" style="padding-top: 40px; max-width: 900px;">
+    <!-- Title -->
+    <div class="section-header">
+        <span class="section-tag"><i class="fa-solid fa-truck-fast"></i> Minh Bạch & Tận Tâm</span>
+        <h1 class="section-title">Theo Dõi Vận Đơn & Duyệt Ảnh Hoa Thực Tế</h1>
+        <p class="section-desc">Nhập mã đơn hàng và số điện thoại để kiểm tra tiến độ cắm hoa, vị trí giao hàng và xem ảnh chụp sản phẩm trước khi giao.</p>
+    </div>
+
+    <!-- Search Box -->
+    <div style="background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 30px; box-shadow: var(--shadow-sm); margin-bottom: 40px;">
+        <form action="/tra-cuu-don-hang" method="get" style="display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 14px; align-items: center;">
+            <div>
+                <input type="text" name="orderCode" value="@Model.OrderCode" placeholder="Mã đơn hàng (VD: FL202609088831)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-family: inherit; font-size: 0.92rem; text-transform: uppercase;" />
+            </div>
+            <div>
+                <input type="text" name="phone" value="@Model.PhoneNumber" placeholder="Số điện thoại đặt hoa" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-family: inherit; font-size: 0.92rem;" />
+            </div>
+            <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
+                <i class="fa-solid fa-magnifying-glass"></i> Tra Cứu
+            </button>
+        </form>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div style="background: #ffebee; color: #c62828; padding: 16px 20px; border-radius: 14px; margin-bottom: 30px; font-weight: 600;">
+            <i class="fa-solid fa-circle-exclamation" style="margin-right: 8px;"></i> @Model.ErrorMessage
+        </div>
+    }
+
+    @if (Model.Order != null)
+    {
+        var order = Model.Order;
+        
+        <!-- 1. Trạng Thái Vận Trình (5-Step Timeline) -->
+        <div style="background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 36px; box-shadow: var(--shadow-md); margin-bottom: 36px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 18px; margin-bottom: 30px;">
+                <div>
+                    <span style="font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: 700;">Đơn Hàng:</span>
+                    <h2 class="font-serif" style="font-size: 1.5rem; margin: 0; color: var(--primary);">#@order.OrderCode</h2>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.82rem; color: #888;">Dự kiến giao:</span>
+                    <div style="font-weight: 700; color: #2e7d32;">@order.DeliveryDate.ToString("dd/MM/yyyy") (@order.DeliveryTimeSlot)</div>
+                </div>
+            </div>
+
+            <!-- Steps Visualization -->
+            @{
+                string[] stepKeys = new[] { "Pending", "Confirmed", "Arranging", "Shipping", "Delivered" };
+                string[] stepLabels = new[] { "Đã Tiếp Nhận", "Đã Xác Nhận", "Đang Cắm Hoa", "Đang Đi Giao", "Đã Giao Thành Công" };
+                int currentStepIdx = 1;
+                if (order.OrderStatus == "Confirmed") currentStepIdx = 2;
+                if (order.OrderStatus == "Arranging" || order.OrderStatus == "ProofReady") currentStepIdx = 3;
+                if (order.OrderStatus == "Shipping") currentStepIdx = 4;
+                if (order.OrderStatus == "Delivered") currentStepIdx = 5;
+            }
+
+            <div style="display: flex; justify-content: space-between; position: relative; margin-bottom: 40px;">
+                <!-- Background connecting bar -->
+                <div style="position: absolute; top: 20px; left: 40px; right: 40px; height: 4px; background: #eee; z-index: 1;"></div>
+                
+                @for (int i = 0; i < 5; i++)
+                {
+                    bool isPassed = (i + 1) <= currentStepIdx;
+                    bool isCurrent = (i + 1) == currentStepIdx;
+                    <div style="position: relative; z-index: 2; text-align: center; flex: 1;">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; @(isPassed ? "background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(200,75,97,0.3);" : "background: #fff; border: 2px solid #ddd; color: #aaa;")">
+                            @if (isPassed && !isCurrent)
+                            {
+                                <i class="fa-solid fa-check"></i>
+                            }
+                            else
+                            {
+                                @(i + 1)
+                            }
+                        </div>
+                        <div style="font-size: 0.82rem; font-weight: @(isCurrent ? "700" : "500"); color: @(isCurrent ? "var(--primary)" : "#555");">
+                            @stepLabels[i]
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- 2. Ảnh Chụp Thực Tế Bó Hoa Sau Khi Cắm -->
+            @if (!string.IsNullOrEmpty(order.ProofPhotoUrl))
+            {
+                <div style="background: var(--bg-body); border-radius: 16px; padding: 24px; border: 2px dashed #ffd2da; margin-bottom: 30px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+                        <i class="fa-solid fa-camera" style="color: var(--primary); font-size: 1.4rem;"></i>
+                        <div>
+                            <h3 class="font-serif" style="font-size: 1.2rem; margin: 0;">Ảnh Hoa Chụp Thực Tế Trước Khi Giao</h3>
+                            <div style="font-size: 0.8rem; color: #888;">Được chụp trực tiếp bởi nghệ nhân cắm hoa tại xưởng</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                        <img src="@order.ProofPhotoUrl" alt="Ảnh hoa thực tế" style="width: 240px; height: 240px; border-radius: 14px; object-fit: cover; border: 4px solid #fff; box-shadow: var(--shadow-sm);" />
+                        <div style="flex: 1; min-width: 240px;">
+                            <div style="background: #fff; padding: 16px; border-radius: 12px; font-size: 0.9rem; line-height: 1.6; margin-bottom: 14px;">
+                                <i class="fa-solid fa-circle-check" style="color: #2e7d32;"></i> Tác phẩm hoa của bạn đã được hoàn thiện đúng mẫu thiết kế và chuẩn bị được chuyển qua bộ phận giao vận chuyên nghiệp.
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="Swal.fire('Cảm ơn bạn!', 'Chúng tôi đã ghi nhận sự hài lòng của bạn. Shipper sẽ lập tức xuất phát!', 'success')">
+                                <i class="fa-solid fa-thumbs-up"></i> Tôi Hài Lòng, Cho Giao Ngay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- 3. Thông Tin Chi Tiết Người Nhận & Sản Phẩm -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; font-size: 0.9rem; line-height: 1.7; border-top: 1px solid var(--border); padding-top: 24px;">
+                <div>
+                    <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--dark);">Thông Tin Người Nhận:</h4>
+                    <div><strong>Họ tên:</strong> @order.RecipientName</div>
+                    <div><strong>Địa chỉ:</strong> @order.RecipientAddress, @order.District, @order.City</div>
+                    <div><strong>Phương thức:</strong> @order.PaymentMethod (@order.PaymentStatus)</div>
+                </div>
+                <div>
+                    <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--dark);">Sản Phẩm Trong Đơn:</h4>
+                    @foreach (var item in order.OrderDetails)
+                    {
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>@item.ProductName x @item.Quantity</span>
+                            <strong>@item.TotalPrice.ToString("N0") đ</strong>
+                        </div>
+                    }
+                    @foreach (var addon in order.OrderAddons)
+                    {
+                        <div style="display: flex; justify-content: space-between; color: #666; font-size: 0.85rem;">
+                            <span>+ @addon.AddonName</span>
+                            <span>@addon.TotalPrice.ToString("N0") đ</span>
+                        </div>
+                    }
+                    <div style="display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 6px; margin-top: 6px; font-weight: 700; color: var(--primary);">
+                        <span>Tổng tiền:</span>
+                        <span>@order.TotalAmount.ToString("N0") đ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

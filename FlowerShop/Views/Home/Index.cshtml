@@ -1,0 +1,245 @@
+@{
+    ViewBag.Title = "Bloom & Grace - Tiệm Hoa Tươi Nghệ Thuật & Quà Tặng Sang Trọng";
+    var categories = ViewBag.Categories as List<FlowerShop.Models.Entities.Category> ?? new List<FlowerShop.Models.Entities.Category>();
+    var bestSellers = ViewBag.BestSellers as List<FlowerShop.Models.Entities.Product> ?? new List<FlowerShop.Models.Entities.Product>();
+    var flashSales = ViewBag.FlashSales as List<FlowerShop.Models.Entities.Product> ?? new List<FlowerShop.Models.Entities.Product>();
+    var featured = ViewBag.FeaturedFlowers as List<FlowerShop.Models.Entities.Product> ?? new List<FlowerShop.Models.Entities.Product>();
+}
+
+<!-- 1. HERO SECTION -->
+<section class="hero-section">
+    <div class="hero-container">
+        <div class="hero-content">
+            <div class="hero-tag">
+                <i class="fa-solid fa-sparkles"></i> Mùa Hoa Mới • Tuyển Chọn Tinh Tế
+            </div>
+            <h1 class="hero-title">
+                Trao Gửi Cảm Xúc Qua Từng <em>Cánh Hoa Nghệ Thuật</em>
+            </h1>
+            <p class="hero-desc">
+                Tuyển chọn những đóa hoa nhập khẩu tươi đẹp nhất thế giới. Nghệ nhân hoa thiết kế riêng cho từng khoảnh khắc đáng nhớ của bạn và người thương.
+            </p>
+            <div class="hero-actions">
+                <a href="/Product" class="btn btn-primary">
+                    Khám Phá Bộ Sưu Tập <i class="fa-solid fa-arrow-right-long"></i>
+                </a>
+                <a href="/tu-thiet-ke-bo-hoa" class="btn btn-secondary">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> Tự Thiết Kế Bó Hoa
+                </a>
+            </div>
+
+            <div class="hero-badges">
+                <div class="hero-badge-item">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Giao Nhanh 60 Phút</span>
+                </div>
+                <div class="hero-badge-item">
+                    <i class="fa-solid fa-camera"></i>
+                    <span>Chụp Ảnh Duyệt Trước</span>
+                </div>
+                <div class="hero-badge-item">
+                    <i class="fa-solid fa-shield-heart"></i>
+                    <span>Cam Kết Hoa Tươi 3 Ngày</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <img src="https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=800&q=80" alt="Bloom & Grace Flowers" class="hero-img-main" />
+            <div class="hero-floating-card">
+                <div class="avatar"><i class="fa-solid fa-heart"></i></div>
+                <div>
+                    <div style="font-size: 0.82rem; color: #888; text-transform: uppercase; font-weight: 600;">Khách Hàng Hài Lòng</div>
+                    <div style="font-weight: 700; font-size: 1.1rem; color: #2e2426;">+15.000 Đơn Hoa Hạnh Phúc</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 2. FLASH SALE BOX -->
+<section class="section" style="padding-top: 50px; padding-bottom: 20px;">
+    <div class="flash-sale-box">
+        <div class="flash-sale-info">
+            <span style="background: #ff4757; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase;">Ưu Đãi Khung Giờ Vàng</span>
+            <h3 class="font-serif" style="margin-top: 10px;">Flash Sale Hoa Tươi Trong Ngày</h3>
+            <p>Giảm giá đến 25% cho các mẫu hoa thiết kế giới hạn hôm nay. Miễn phí giao hàng hỏa tốc.</p>
+        </div>
+        <div class="flash-countdown">
+            <div class="countdown-unit">
+                <span class="countdown-num" id="cdHours">06</span>
+                <span class="countdown-label">Giờ</span>
+            </div>
+            <div class="countdown-unit">
+                <span class="countdown-num" id="cdMins">42</span>
+                <span class="countdown-label">Phút</span>
+            </div>
+            <div class="countdown-unit">
+                <span class="countdown-num" id="cdSecs">15</span>
+                <span class="countdown-label">Giây</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Sale Products -->
+    <div class="products-grid">
+        @foreach (var product in flashSales)
+        {
+            <div class="product-card">
+                <div class="product-badges">
+                    <span class="badge-tag badge-hot"><i class="fa-solid fa-bolt"></i> Flash Sale</span>
+                </div>
+                <div class="product-thumb">
+                    <img src="@product.MainImageUrl" alt="@product.Name" loading="lazy" />
+                    <div class="product-quick-actions">
+                        <button type="button" class="btn-quick-add js-quick-add" data-id="@product.Id" data-qty="1">
+                            <i class="fa-solid fa-bag-shopping"></i> Thêm Nhanh
+                        </button>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <div class="product-occasion">@(product.Occasion != null ? product.Occasion.Name : "Hoa Nghệ Thuật")</div>
+                    <h3 class="product-title font-serif">
+                        <a href="/hoa/@product.Slug">@product.Name</a>
+                    </h3>
+                    <div class="product-rating">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <span>(@product.ReviewCount)</span>
+                    </div>
+                    <div class="product-price-box">
+                        <span class="product-price">@((product.SalePrice ?? product.Price).ToString("N0")) đ</span>
+                        @if (product.SalePrice.HasValue)
+                        {
+                            <span class="product-old-price">@product.Price.ToString("N0") đ</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- 3. DANH MỤC THỊNH HÀNH -->
+<section class="section">
+    <div class="section-header">
+        <span class="section-tag">Khám Phá Theo Dáng Cắm</span>
+        <h2 class="section-title">Danh Mục Hoa Tươi Nghệ Thuật</h2>
+        <p class="section-desc">Từ những bó hoa tay cầm lãng mạn đến những bình hoa pha lê vương giả cắm sẵn sang trọng.</p>
+    </div>
+
+    <div class="categories-grid">
+        @foreach (var cat in categories)
+        {
+            <a href="/Product?categoryId=@cat.Id" class="category-card">
+                <div class="category-card-img">
+                    <img src="@cat.ImageUrl" alt="@cat.Name" loading="lazy" />
+                </div>
+                <div class="category-card-body">
+                    <h3 class="category-card-title font-serif">@cat.Name</h3>
+                    <div class="category-card-count">Khám phá ngay <i class="fa-solid fa-arrow-right" style="font-size: 0.75rem;"></i></div>
+                </div>
+            </a>
+        }
+    </div>
+</section>
+
+<!-- 4. SẢN PHẨM BÁN CHẠY NHẤT -->
+<section class="section">
+    <div class="section-header">
+        <span class="section-tag">Yêu Thích Nhất</span>
+        <h2 class="section-title">Bó Hoa Best Seller Đang Thịnh Hành</h2>
+        <p class="section-desc">Những tác phẩm hoa được khách hàng yêu thích và lựa chọn nhiều nhất trong tuần qua.</p>
+    </div>
+
+    <div class="products-grid">
+        @foreach (var product in bestSellers)
+        {
+            <div class="product-card">
+                <div class="product-badges">
+                    <span class="badge-tag badge-sale">Best Seller</span>
+                </div>
+                <div class="product-thumb">
+                    <img src="@product.MainImageUrl" alt="@product.Name" loading="lazy" />
+                    <div class="product-quick-actions">
+                        <button type="button" class="btn-quick-add js-quick-add" data-id="@product.Id" data-qty="1">
+                            <i class="fa-solid fa-bag-shopping"></i> Thêm Nhanh
+                        </button>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <div class="product-occasion">@(product.Occasion != null ? product.Occasion.Name : "Boutique Collection")</div>
+                    <h3 class="product-title font-serif">
+                        <a href="/hoa/@product.Slug">@product.Name</a>
+                    </h3>
+                    <div class="product-rating">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <span>(@product.ReviewCount đánh giá)</span>
+                    </div>
+                    <div class="product-price-box">
+                        <span class="product-price">@((product.SalePrice ?? product.Price).ToString("N0")) đ</span>
+                        @if (product.SalePrice.HasValue)
+                        {
+                            <span class="product-old-price">@product.Price.ToString("N0") đ</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div style="text-align: center; margin-top: 48px;">
+        <a href="/Product" class="btn btn-secondary">Xem Toàn Bộ Sản Phẩm (@bestSellers.Count+)</a>
+    </div>
+</section>
+
+<!-- 5. TẠI SAO CHỌN BLOOM & GRACE -->
+<section style="background: #fff; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 70px 24px;">
+    <div class="section" style="padding: 0;">
+        <div class="section-header">
+            <span class="section-tag">Dịch Vụ Độc Quyền</span>
+            <h2 class="section-title">Trải Nghiệm Đặt Hoa Đẳng Cấp</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px;">
+            <div style="text-align: center; padding: 24px;">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 20px;">
+                    <i class="fa-solid fa-camera-retro"></i>
+                </div>
+                <h4 class="font-serif" style="font-size: 1.25rem; margin-bottom: 10px;">Chụp Ảnh Hoa Thực Tế</h4>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Nghệ nhân cắm xong sẽ chụp ảnh gửi bạn duyệt trước khi shipper xuất phát giao hoa.</p>
+            </div>
+
+            <div style="text-align: center; padding: 24px;">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: #eef7f2; color: #2e7d32; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 20px;">
+                    <i class="fa-solid fa-truck-fast"></i>
+                </div>
+                <h4 class="font-serif" style="font-size: 1.25rem; margin-bottom: 10px;">Giao Nhanh 60 - 120 Phút</h4>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Đội ngũ giao hàng chuyên biệt, bảo quản thùng hoa cố định không dập nát cánh.</p>
+            </div>
+
+            <div style="text-align: center; padding: 24px;">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: #fff8e1; color: #f57f17; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 20px;">
+                    <i class="fa-solid fa-mask"></i>
+                </div>
+                <h4 class="font-serif" style="font-size: 1.25rem; margin-bottom: 10px;">Tặng Ẩn Danh (Secret)</h4>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Tuyệt đối bảo mật thông tin người gửi nếu bạn muốn tạo bất ngờ lãng mạn cho người nhận.</p>
+            </div>
+
+            <div style="text-align: center; padding: 24px;">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: #e3f2fd; color: #1565c0; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 20px;">
+                    <i class="fa-solid fa-credit-card"></i>
+                </div>
+                <h4 class="font-serif" style="font-size: 1.25rem; margin-bottom: 10px;">Thanh Toán Đa Kênh</h4>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Hỗ trợ VNPay QR, Stripe thẻ quốc tế cho Việt Kiều, quét mã VietQR và COD tiện lợi.</p>
+            </div>
+        </div>
+    </div>
+</section>

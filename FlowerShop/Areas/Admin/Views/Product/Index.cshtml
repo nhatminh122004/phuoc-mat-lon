@@ -1,0 +1,78 @@
+@model List<FlowerShop.Models.Entities.Product>
+@{
+    ViewBag.Title = "Quản Lý Mẫu Hoa - Admin";
+}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="font-serif" style="font-size: 1.8rem; margin: 0; color: var(--admin-dark);">Quản Lý Mẫu Hoa & Danh Mục</h1>
+        <p style="color: var(--admin-text-muted); font-size: 0.95rem; margin-top: 4px;">Danh sách các mẫu hoa tươi, giá bán, số lượng tồn và trạng thái trưng bày.</p>
+    </div>
+    <a href="/Admin/Product/Create" class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-plus"></i> Thêm Mẫu Hoa Mới
+    </a>
+</div>
+
+<div class="admin-card-box">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Ảnh</th>
+                    <th>Tên Mẫu Hoa</th>
+                    <th>Danh Mục</th>
+                    <th>Dịp Tặng</th>
+                    <th>Giá Bán</th>
+                    <th>Giá Khuyến Mãi</th>
+                    <th>Tồn Kho</th>
+                    <th>Trạng Thái</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td>
+                            <img src="@p.MainImageUrl" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;" />
+                        </td>
+                        <td>
+                            <strong>@p.Name</strong>
+                            <div style="font-size: 0.8rem; color: #888;">SKU: @p.SKU</div>
+                        </td>
+                        <td>@(p.Category != null ? p.Category.Name : "-")</td>
+                        <td>@(p.Occasion != null ? p.Occasion.Name : "-")</td>
+                        <td><strong>@p.Price.ToString("N0") đ</strong></td>
+                        <td>
+                            @if (p.SalePrice.HasValue)
+                            {
+                                <span style="color: #c84b61; font-weight: 700;">@p.SalePrice.Value.ToString("N0") đ</span>
+                            }
+                            else
+                            {
+                                <span style="color: #aaa;">-</span>
+                            }
+                        </td>
+                        <td>@p.StockQuantity</td>
+                        <td>
+                            <span class="status-pill @(p.IsActive ? "pill-delivered" : "pill-cancelled")">
+                                @(p.IsActive ? "Đang Bán" : "Đã Ẩn")
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/Admin/Product/Edit/@p.Id" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.8rem;">Sửa</a>
+                                <form action="/Admin/Product/ToggleActive" method="post" style="margin: 0;">
+                                    <input type="hidden" name="id" value="@p.Id" />
+                                    <button type="submit" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.8rem;">
+                                        @(p.IsActive ? "Ẩn" : "Hiện")
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

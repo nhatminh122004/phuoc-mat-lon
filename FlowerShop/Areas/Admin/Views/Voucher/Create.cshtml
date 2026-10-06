@@ -1,0 +1,65 @@
+@model FlowerShop.Models.Entities.Voucher
+@{
+    ViewBag.Title = "Tạo Mã Voucher Mới - Admin";
+}
+
+<div style="max-width: 700px; margin-bottom: 24px;">
+    <a href="/Admin/Voucher" style="font-size: 0.85rem; color: var(--admin-primary); margin-bottom: 8px; display: inline-block;">
+        <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách voucher
+    </a>
+    <h1 class="font-serif" style="font-size: 1.8rem; margin: 0; color: var(--admin-dark);">Tạo Mã Giảm Giá Mới</h1>
+</div>
+
+<div class="admin-card-box" style="max-width: 700px;">
+    @using (Html.BeginForm("Create", "Voucher", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Mã Code (VIẾT HOA KHÔNG DẤU) *</label>
+            @Html.TextBoxFor(m => m.Code, new { required = "required", placeholder = "VD: FLORA83", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none; text-transform: uppercase;" })
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Mô tả khuyến mãi</label>
+            @Html.TextBoxFor(m => m.Description, new { placeholder = "Giảm 50k cho đơn từ 500k...", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Giảm theo % (1-100)</label>
+                @Html.TextBoxFor(m => m.DiscountPercent, new { type = "number", min = "1", max = "100", placeholder = "10", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Hoặc Giảm số tiền cố định (đ)</label>
+                @Html.TextBoxFor(m => m.DiscountAmount, new { type = "number", placeholder = "50000", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Đơn tối thiểu áp dụng (đ)</label>
+                @Html.TextBoxFor(m => m.MinOrderValue, new { type = "number", value = "0", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Giảm tối đa (đ) nếu giảm theo %</label>
+                @Html.TextBoxFor(m => m.MaxDiscountAmount, new { type = "number", placeholder = "100000", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Ngày bắt đầu</label>
+                <input type="date" name="StartDate" value="@DateTime.Today.ToString("yyyy-MM-dd")" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Ngày kết thúc</label>
+                <input type="date" name="EndDate" value="@DateTime.Today.AddMonths(3).ToString("yyyy-MM-dd")" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="padding: 12px 28px;">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu Mã Voucher
+        </button>
+    }
+</div>

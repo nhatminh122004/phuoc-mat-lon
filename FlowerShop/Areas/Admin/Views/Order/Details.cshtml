@@ -1,0 +1,141 @@
+@model FlowerShop.Models.Entities.Order
+@{
+    ViewBag.Title = "Chi Tiết Đơn Hàng #" + Model.OrderCode + " - Admin";
+}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <a href="/Admin/Order" style="font-size: 0.85rem; color: var(--admin-primary); margin-bottom: 6px; display: inline-block;">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách đơn
+        </a>
+        <h1 class="font-serif" style="font-size: 1.8rem; margin: 0; color: var(--admin-dark);">Chi Tiết Đơn Hoa #@Model.OrderCode</h1>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="/Admin/Order/PrintSlip/@Model.Id" target="_blank" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-print"></i> In Phiếu Giao Hoa
+        </a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 32px; align-items: start;">
+    <!-- Left: Order Details & Products -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Products Box -->
+        <div class="admin-card-box">
+            <h3 class="font-serif" style="font-size: 1.2rem; margin-bottom: 16px;">Sản Phẩm Trong Đơn</h3>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Sản Phẩm</th>
+                        <th>Đơn Giá</th>
+                        <th>Số Lượng</th>
+                        <th style="text-align: right;">Thành Tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderDetails)
+                    {
+                        <tr>
+                            <td style="display: flex; gap: 12px; align-items: center;">
+                                <img src="@item.ProductImageUrl" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;" />
+                                <strong>@item.ProductName</strong>
+                            </td>
+                            <td>@item.UnitPrice.ToString("N0") đ</td>
+                            <td>@item.Quantity</td>
+                            <td style="text-align: right; font-weight: 700;">@item.TotalPrice.ToString("N0") đ</td>
+                        </tr>
+                    }
+                    @foreach (var addon in Model.OrderAddons)
+                    {
+                        <tr>
+                            <td><i class="fa-solid fa-gift" style="color: var(--admin-primary); margin-right: 6px;"></i> @addon.AddonName</td>
+                            <td>@addon.UnitPrice.ToString("N0") đ</td>
+                            <td>@addon.Quantity</td>
+                            <td style="text-align: right; font-weight: 700;">@addon.TotalPrice.ToString("N0") đ</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--admin-border); text-align: right; font-size: 1.2rem; font-weight: 700; color: var(--admin-primary);">
+                Tổng Cộng: @Model.TotalAmount.ToString("N0") đ
+            </div>
+        </div>
+
+        <!-- Recipient & Message Box -->
+        <div class="admin-card-box">
+            <h3 class="font-serif" style="font-size: 1.2rem; margin-bottom: 16px;">Thông Tin Giao Hoa & Lời Chúc</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 0.92rem; line-height: 1.8;">
+                <div>
+                    <div><strong style="color: #888;">Người Nhận:</strong> @Model.RecipientName</div>
+                    <div><strong style="color: #888;">Số Điện Thoại:</strong> @Model.RecipientPhone</div>
+                    <div><strong style="color: #888;">Địa Chỉ:</strong> @Model.RecipientAddress, @Model.District, @Model.City</div>
+                    <div><strong style="color: #888;">Thời Gian Nhận:</strong> <span style="color: #c84b61; font-weight: 700;">@Model.DeliveryDate.ToString("dd/MM/yyyy") (@Model.DeliveryTimeSlot)</span></div>
+                </div>
+                <div>
+                    <div><strong style="color: #888;">Người Đặt:</strong> @Model.SenderName (@Model.SenderPhone)</div>
+                    <div><strong style="color: #888;">Chế Độ Ẩn Danh:</strong> @(Model.IsAnonymous ? "Có (Bảo mật tên người gửi)" : "Không")</div>
+                    <div><strong style="color: #888;">Phương Thức:</strong> @Model.PaymentMethod (@Model.PaymentStatus)</div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.CardMessage))
+            {
+                <div style="margin-top: 20px; background: #faf5f6; border-left: 4px solid var(--admin-primary); padding: 14px 18px; border-radius: 0 10px 10px 0;">
+                    <div style="font-weight: 700; font-size: 0.85rem; color: var(--admin-primary); margin-bottom: 4px;">Lời chúc thiệp nghệ nhân cần viết:</div>
+                    <div style="font-style: italic; color: #444;">"@Model.CardMessage"</div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right: Update Status & Proof Photo -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div class="admin-card-box">
+            <h3 class="font-serif" style="font-size: 1.2rem; margin-bottom: 16px;">Cập Nhật Tiến Độ & Ảnh Thực Tế</h3>
+            
+            <form action="/Admin/Order/UpdateStatus" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Trạng thái cắm hoa & vận chuyển:</label>
+                    <select name="orderStatus" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;">
+                        <option value="Pending" @(Model.OrderStatus == "Pending" ? "selected" : "")>Chờ Tiếp Nhận</option>
+                        <option value="Confirmed" @(Model.OrderStatus == "Confirmed" ? "selected" : "")>Đã Xác Nhận</option>
+                        <option value="Arranging" @(Model.OrderStatus == "Arranging" ? "selected" : "")>Nghệ Nhân Đang Cắm Hoa</option>
+                        <option value="ProofReady" @(Model.OrderStatus == "ProofReady" ? "selected" : "")>Đã Cắm Xong - Chờ Khách Duyệt Ảnh</option>
+                        <option value="Shipping" @(Model.OrderStatus == "Shipping" ? "selected" : "")>Shipper Đang Đi Giao</option>
+                        <option value="Delivered" @(Model.OrderStatus == "Delivered" ? "selected" : "")>Đã Giao Thành Công</option>
+                        <option value="Cancelled" @(Model.OrderStatus == "Cancelled" ? "selected" : "")>Hủy Đơn</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Trạng thái thanh toán:</label>
+                    <select name="paymentStatus" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;">
+                        <option value="Pending" @(Model.PaymentStatus == "Pending" ? "selected" : "")>Pending (Chờ thanh toán)</option>
+                        <option value="Paid" @(Model.PaymentStatus == "Paid" ? "selected" : "")>Paid (Đã thanh toán đủ)</option>
+                        <option value="Failed" @(Model.PaymentStatus == "Failed" ? "selected" : "")>Failed (Thất bại)</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">URL Ảnh Hoa Cắm Thực Tế (Gửi khách duyệt):</label>
+                    <input type="text" name="proofPhotoUrl" value="@Model.ProofPhotoUrl" placeholder="https://..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none; font-size: 0.85rem;" />
+                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Dán link ảnh chụp bó hoa thực tế của thợ để khách xem được trên trang tra cứu đơn.</div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.ProofPhotoUrl))
+                {
+                    <div style="margin-bottom: 18px; text-align: center;">
+                        <img src="@Model.ProofPhotoUrl" alt="Proof" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; border: 1px solid var(--admin-border);" />
+                    </div>
+                }
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+                    <i class="fa-solid fa-floppy-disk"></i> Lưu Cập Nhật Đơn
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

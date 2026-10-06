@@ -1,0 +1,168 @@
+@model FlowerShop.Models.ViewModels.ProductFilterViewModel
+@{
+    ViewBag.Title = "Bộ Sưu Tập Hoa Tươi Nghệ Thuật - Bloom & Grace";
+}
+
+<div class="section" style="padding-top: 40px;">
+    <!-- Breadcrumb & Header -->
+    <div style="margin-bottom: 30px;">
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+            <a href="/">Trang Chủ</a> / <span style="color: var(--primary);">Bộ Sưu Tập Hoa</span>
+        </div>
+        <h1 class="section-title font-serif" style="text-align: left; margin-bottom: 6px;">Bộ Sưu Tập Hoa Tươi & Quà Tặng</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Tìm thấy <strong>@Model.TotalProducts</strong> tác phẩm hoa tươi nghệ thuật phù hợp.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 40px; align-items: start;">
+        <!-- 1. Bộ Lọc Đa Tiêu Chí (Sidebar) -->
+        <aside style="background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+                <h3 class="font-serif" style="font-size: 1.15rem; margin: 0;"><i class="fa-solid fa-filter" style="color: var(--primary); font-size: 0.9rem; margin-right: 6px;"></i> Bộ Lọc</h3>
+                <a href="/Product" style="font-size: 0.8rem; color: var(--primary); font-weight: 600;">Xóa Lọc</a>
+            </div>
+
+            <form action="/Product" method="get" id="filterForm">
+                <!-- Lọc theo Dịp -->
+                <div style="margin-bottom: 24px;">
+                    <h4 style="font-size: 0.95rem; margin-bottom: 12px; font-weight: 700; color: #2e2426;">Chủ Đề Dịp Tặng</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        @foreach (var occ in Model.Occasions)
+                        {
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                                <input type="radio" name="occasionId" value="@occ.Id" @(Model.SelectedOccasionId == occ.Id ? "checked" : "") onchange="this.form.submit()" />
+                                <span>@occ.Name</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Lọc theo Dáng Cắm -->
+                <div style="margin-bottom: 24px;">
+                    <h4 style="font-size: 0.95rem; margin-bottom: 12px; font-weight: 700; color: #2e2426;">Dáng Cắm</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                                <input type="radio" name="categoryId" value="@cat.Id" @(Model.SelectedCategoryId == cat.Id ? "checked" : "") onchange="this.form.submit()" />
+                                <span>@cat.Name</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Lọc theo Mức Giá -->
+                <div style="margin-bottom: 24px;">
+                    <h4 style="font-size: 0.95rem; margin-bottom: 12px; font-weight: 700; color: #2e2426;">Khoảng Giá</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;">
+                        <label style="cursor: pointer;"><input type="radio" name="priceRange" value="under500" @(Model.PriceRange == "under500" ? "checked" : "") onchange="this.form.submit()" /> Dưới 500.000 đ</label>
+                        <label style="cursor: pointer;"><input type="radio" name="priceRange" value="500to1000" @(Model.PriceRange == "500to1000" ? "checked" : "") onchange="this.form.submit()" /> 500.000 đ - 1.000.000 đ</label>
+                        <label style="cursor: pointer;"><input type="radio" name="priceRange" value="1000to2000" @(Model.PriceRange == "1000to2000" ? "checked" : "") onchange="this.form.submit()" /> 1.000.000 đ - 2.000.000 đ</label>
+                        <label style="cursor: pointer;"><input type="radio" name="priceRange" value="over2000" @(Model.PriceRange == "over2000" ? "checked" : "") onchange="this.form.submit()" /> Trên 2.000.000 đ</label>
+                    </div>
+                </div>
+
+                <!-- Lọc theo Tông Màu -->
+                <div style="margin-bottom: 24px;">
+                    <h4 style="font-size: 0.95rem; margin-bottom: 12px; font-weight: 700; color: #2e2426;">Tông Màu Cảm Xúc</h4>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        @foreach (var color in new[] { "Đỏ", "Hồng", "Vàng", "Trắng", "Tím" })
+                        {
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="color" value="@color" @(Model.ColorTone == color ? "checked" : "") onchange="this.form.submit()" style="display: none;" />
+                                <span style="display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; border: 1px solid var(--border); @(Model.ColorTone == color ? "background: var(--primary); color: #fff; border-color: var(--primary);" : "background: #fff;")">@color</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+            </form>
+        </aside>
+
+        <!-- 2. Danh Sách Sản Phẩm (Right Grid) -->
+        <div>
+            <!-- Top Controls (Sorting) -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 0.88rem; color: var(--text-muted);">Sắp xếp:</span>
+                    <select onchange="location = this.value;" style="padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); font-family: inherit; font-size: 0.88rem; outline: none; background: #fff;">
+                        <option value="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, occasionId = Model.SelectedOccasionId, priceRange = Model.PriceRange, color = Model.ColorTone, sortBy = "newest" })" @(Model.SortBy == "newest" ? "selected" : "")>Mới nhất</option>
+                        <option value="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, occasionId = Model.SelectedOccasionId, priceRange = Model.PriceRange, color = Model.ColorTone, sortBy = "priceAsc" })" @(Model.SortBy == "priceAsc" ? "selected" : "")>Giá tăng dần</option>
+                        <option value="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, occasionId = Model.SelectedOccasionId, priceRange = Model.PriceRange, color = Model.ColorTone, sortBy = "priceDesc" })" @(Model.SortBy == "priceDesc" ? "selected" : "")>Giá giảm dần</option>
+                        <option value="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, occasionId = Model.SelectedOccasionId, priceRange = Model.PriceRange, color = Model.ColorTone, sortBy = "rating" })" @(Model.SortBy == "rating" ? "selected" : "")>Đánh giá cao nhất</option>
+                    </select>
+                </div>
+            </div>
+
+            @if (!Model.Products.Any())
+            {
+                <div style="text-align: center; padding: 60px 0; background: #fff; border-radius: 16px; border: 1px solid var(--border);">
+                    <i class="fa-solid fa-seedling" style="font-size: 3rem; color: #dbccce; margin-bottom: 16px;"></i>
+                    <h3 class="font-serif" style="margin-bottom: 8px;">Không tìm thấy mẫu hoa nào</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">Bạn hãy thử thay đổi tiêu chí lọc hoặc tìm kiếm từ khóa khác xem sao nhé.</p>
+                    <a href="/Product" class="btn btn-secondary btn-sm">Xem Toàn Bộ Sản Phẩm</a>
+                </div>
+            }
+            else
+            {
+                <div class="products-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+                    @foreach (var product in Model.Products)
+                    {
+                        <div class="product-card">
+                            @if (product.IsFlashSale)
+                            {
+                                <div class="product-badges">
+                                    <span class="badge-tag badge-hot">Flash Sale</span>
+                                </div>
+                            }
+                            else if (product.IsBestSeller)
+                            {
+                                <div class="product-badges">
+                                    <span class="badge-tag badge-sale">Best Seller</span>
+                                </div>
+                            }
+
+                            <div class="product-thumb">
+                                <img src="@product.MainImageUrl" alt="@product.Name" loading="lazy" />
+                                <div class="product-quick-actions">
+                                    <button type="button" class="btn-quick-add js-quick-add" data-id="@product.Id" data-qty="1">
+                                        <i class="fa-solid fa-bag-shopping"></i> Thêm Nhanh
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <div class="product-occasion">@(product.Occasion != null ? product.Occasion.Name : "Boutique Collection")</div>
+                                <h3 class="product-title font-serif" style="font-size: 1.05rem;">
+                                    <a href="/hoa/@product.Slug">@product.Name</a>
+                                </h3>
+                                <div class="product-rating">
+                                    <i class="fa-solid fa-star"></i>
+                                    <span>@product.RatingAvg (@product.ReviewCount)</span>
+                                </div>
+                                <div class="product-price-box">
+                                    <span class="product-price">@((product.SalePrice ?? product.Price).ToString("N0")) đ</span>
+                                    @if (product.SalePrice.HasValue)
+                                    {
+                                        <span class="product-old-price">@product.Price.ToString("N0") đ</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Phân trang -->
+                if (Model.TotalPages > 1)
+                {
+                    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 48px;">
+                        @for (int p = 1; p <= Model.TotalPages; p++)
+                        {
+                            <a href="@Url.Action("Index", new { page = p, categoryId = Model.SelectedCategoryId, occasionId = Model.SelectedOccasionId, priceRange = Model.PriceRange, color = Model.ColorTone, sortBy = Model.SortBy, search = Model.SearchQuery })" 
+                               style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; @(p == Model.CurrentPage ? "background: var(--primary); color: #fff;" : "background: #fff; border: 1px solid var(--border); color: #333;")">
+                                @p
+                            </a>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

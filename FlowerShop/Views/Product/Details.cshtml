@@ -1,0 +1,179 @@
+@model FlowerShop.Models.Entities.Product
+@{
+    ViewBag.Title = Model.Name + " - Bloom & Grace";
+    var addons = ViewBag.AvailableAddons as List<FlowerShop.Models.Entities.AddonItem> ?? new List<FlowerShop.Models.Entities.AddonItem>();
+    var cards = ViewBag.AvailableCards as List<FlowerShop.Models.Entities.GreetingCard> ?? new List<FlowerShop.Models.Entities.GreetingCard>();
+    var related = ViewBag.RelatedProducts as List<FlowerShop.Models.Entities.Product> ?? new List<FlowerShop.Models.Entities.Product>();
+}
+
+<div class="section" style="padding-top: 40px;">
+    <!-- Breadcrumb -->
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">
+        <a href="/">Trang Chủ</a> / <a href="/Product">Bộ Sưu Tập Hoa</a> / <span style="color: var(--primary);">@Model.Name</span>
+    </div>
+
+    <!-- Main PDP Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-bottom: 70px;">
+        <!-- Left Column: Gallery -->
+        <div>
+            <div style="border-radius: 20px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-sm); background: #fff; margin-bottom: 16px;">
+                <img src="@Model.MainImageUrl" alt="@Model.Name" id="mainDetailImg" style="width: 100%; height: 500px; object-fit: cover;" />
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <img src="@Model.MainImageUrl" onclick="document.getElementById('mainDetailImg').src = this.src" style="width: 80px; height: 80px; border-radius: 10px; object-fit: cover; cursor: pointer; border: 2px solid var(--primary);" />
+                @foreach (var img in Model.Images)
+                {
+                    <img src="@img.ImageUrl" onclick="document.getElementById('mainDetailImg').src = this.src" style="width: 80px; height: 80px; border-radius: 10px; object-fit: cover; cursor: pointer; border: 1px solid var(--border);" />
+                }
+            </div>
+        </div>
+
+        <!-- Right Column: Details & Order Box -->
+        <div>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <span class="badge-tag badge-featured">@(Model.Category != null ? Model.Category.Name : "Hoa Nghệ Thuật")</span>
+                @if (Model.Occasion != null)
+                {
+                    <span class="badge-tag badge-sale">@Model.Occasion.Name</span>
+                }
+            </div>
+
+            <h1 class="font-serif" style="font-size: 2.2rem; line-height: 1.25; margin-bottom: 12px; color: var(--dark);">@Model.Name</h1>
+
+            <!-- Rating & SKU -->
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; font-size: 0.88rem;">
+                <div style="color: #ffb800;">
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                    <span style="color: var(--text-muted); margin-left: 4px;">(@Model.ReviewCount đánh giá)</span>
+                </div>
+                <span style="color: #ccc;">|</span>
+                <span style="color: var(--text-muted);">Mã sản phẩm: <strong>@(Model.SKU ?? "FL-00" + Model.Id)</strong></span>
+            </div>
+
+            <!-- Price Box -->
+            <div style="background: var(--bg-body); padding: 18px 24px; border-radius: 16px; margin-bottom: 24px; display: flex; align-items: baseline; gap: 14px;">
+                <span style="font-size: 2rem; font-weight: 700; color: var(--primary);">@((Model.SalePrice ?? Model.Price).ToString("N0")) đ</span>
+                @if (Model.SalePrice.HasValue)
+                {
+                    <span style="font-size: 1.1rem; text-decoration: line-through; color: var(--text-muted);">@Model.Price.ToString("N0") đ</span>
+                    <span style="background: #ff4757; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;">Tiết kiệm @((Model.Price - Model.SalePrice.Value).ToString("N0")) đ</span>
+                }
+            </div>
+
+            <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 28px;">
+                @Model.ShortDescription
+            </p>
+
+            <!-- Addons Selector -->
+            <div style="background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 28px;">
+                <div style="font-size: 0.95rem; font-weight: 700; color: #2e2426; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-gift" style="color: var(--primary);"></i> Mua Kèm Quà Tặng Ý Nghĩa:
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    @foreach (var addon in addons.Take(4))
+                    {
+                        <form action="/Cart/AddAddon" method="post" style="margin: 0;">
+                            <input type="hidden" name="addonId" value="@addon.Id" />
+                            <button type="submit" style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px; background: #fcf9f9; border: 1px solid #f2e3e5; border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.2s;">
+                                <img src="@addon.ImageUrl" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;" />
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.82rem; font-weight: 600; color: #333;">@addon.Name</div>
+                                    <div style="font-size: 0.78rem; color: var(--primary); font-weight: 700;">+@addon.Price.ToString("N0") đ</div>
+                                </div>
+                                <i class="fa-solid fa-plus" style="font-size: 0.8rem; color: var(--primary);"></i>
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            <!-- Form Add to Cart -->
+            <form action="/Cart/AddToCart" method="post" style="display: flex; gap: 16px; margin-bottom: 30px;">
+                <input type="hidden" name="productId" value="@Model.Id" />
+                <div style="display: flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius-full); background: #fff; padding: 0 12px;">
+                    <button type="button" onclick="let q = document.getElementById('itemQty'); if(q.value > 1) q.value--;" style="background: none; border: none; font-size: 1.1rem; cursor: pointer; padding: 10px;">-</button>
+                    <input type="number" id="itemQty" name="quantity" value="1" min="1" max="99" style="width: 44px; text-align: center; border: none; font-weight: 700; outline: none; font-size: 1rem;" />
+                    <button type="button" onclick="let q = document.getElementById('itemQty'); q.value++;" style="background: none; border: none; font-size: 1.1rem; cursor: pointer; padding: 10px;">+</button>
+                </div>
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 14px 28px;">
+                    <i class="fa-solid fa-bag-shopping"></i> Thêm Vào Giỏ Hoa
+                </button>
+            </form>
+
+            <!-- Guarantee Badges -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; border-top: 1px solid var(--border); padding-top: 24px; font-size: 0.85rem; color: var(--text-muted);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-certificate" style="color: var(--secondary); font-size: 1.2rem;"></i>
+                    <span>Hoa tươi 100% tuyển chọn trong ngày</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-truck" style="color: var(--primary); font-size: 1.2rem;"></i>
+                    <span>Giao hỏa tốc 60-120 phút</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-camera" style="color: var(--accent); font-size: 1.2rem;"></i>
+                    <span>Chụp ảnh thành phẩm gửi khách duyệt</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-rotate-left" style="color: #0288d1; font-size: 1.2rem;"></i>
+                    <span>Đổi mới 100% nếu hoa dập nát</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Content: Ý nghĩa & Hướng dẫn chăm sóc hoa -->
+    <div style="background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 36px; box-shadow: var(--shadow-sm); margin-bottom: 70px;">
+        <h3 class="font-serif" style="font-size: 1.5rem; margin-bottom: 16px; color: var(--dark);"><i class="fa-solid fa-book-open" style="color: var(--primary); margin-right: 8px;"></i> Ý Nghĩa & Câu Chuyện Thiết Kế</h3>
+        <div style="line-height: 1.8; color: #444; margin-bottom: 30px;">
+            @Html.Raw(Model.FullDescription ?? Model.ShortDescription)
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.FlowerCareGuide))
+        {
+            <div style="background: #fcf9fa; border-left: 4px solid var(--primary); padding: 18px 24px; border-radius: 0 12px 12px 0;">
+                <h4 style="font-size: 1.1rem; color: var(--dark); margin-bottom: 8px;"><i class="fa-solid fa-droplet" style="color: var(--primary); margin-right: 6px;"></i> Bí Quyết Giữ Hoa Tươi Lâu (7 - 10 Ngày):</h4>
+                <p style="color: var(--text-muted); line-height: 1.6; margin: 0;">@Model.FlowerCareGuide</p>
+            </div>
+        }
+    </div>
+
+    <!-- Related Products -->
+    @if (related.Any())
+    {
+        <div style="margin-bottom: 60px;">
+            <div class="section-header" style="text-align: left; margin-bottom: 32px;">
+                <span class="section-tag">Có Thể Bạn Cũng Thích</span>
+                <h2 class="section-title">Mẫu Hoa Cùng Phong Cách</h2>
+            </div>
+            <div class="products-grid">
+                @foreach (var item in related)
+                {
+                    <div class="product-card">
+                        <div class="product-thumb">
+                            <img src="@item.MainImageUrl" alt="@item.Name" loading="lazy" />
+                            <div class="product-quick-actions">
+                                <button type="button" class="btn-quick-add js-quick-add" data-id="@item.Id" data-qty="1">
+                                    <i class="fa-solid fa-bag-shopping"></i> Thêm Nhanh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title font-serif">
+                                <a href="/hoa/@item.Slug">@item.Name</a>
+                            </h3>
+                            <div class="product-price-box">
+                                <span class="product-price">@((item.SalePrice ?? item.Price).ToString("N0")) đ</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

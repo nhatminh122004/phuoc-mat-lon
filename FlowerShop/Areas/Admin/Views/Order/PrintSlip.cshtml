@@ -1,0 +1,125 @@
+@model FlowerShop.Models.Entities.Order
+@{
+    Layout = null;
+    bool hidePrice = ViewBag.HidePrice == true;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Phiếu Giao Hoa - #@Model.OrderCode</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; font-size: 14px; color: #333; line-height: 1.6; }
+        .slip-box { max-width: 600px; margin: 0 auto; border: 2px solid #333; padding: 24px; border-radius: 8px; }
+        .header { text-align: center; border-bottom: 2px dashed #888; padding-bottom: 14px; margin-bottom: 16px; }
+        .title { font-size: 20px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+        .table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        .table th, .table td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+        .table th { background: #f5f5f5; }
+        .highlight { font-size: 16px; font-weight: bold; color: #000; }
+        .card-msg { background: #fafafa; border: 1px dashed #ccc; padding: 12px; font-style: italic; margin-top: 14px; border-radius: 6px; }
+        @media print {
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px 24px; font-size: 16px; background: #c84b61; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+            In Phiếu Giao Hoa
+        </button>
+    </div>
+
+    <div class="slip-box">
+        <div class="header">
+            <div class="title">Bloom & Grace Floral Boutique</div>
+            <div>PHIẾU ĐIỀU PHỐI GIAO HOA TƯƠI</div>
+            <div>Mã đơn: <strong>@Model.OrderCode</strong> • Ngày in: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
+        </div>
+
+        <div>
+            <div><strong>Thời Gian Giao:</strong> <span class="highlight">@Model.DeliveryDate.ToString("dd/MM/yyyy") (@Model.DeliveryTimeSlot)</span></div>
+            <div><strong>Người Nhận:</strong> <span class="highlight">@Model.RecipientName</span></div>
+            <div><strong>Số Điện Thoại:</strong> <span class="highlight">@Model.RecipientPhone</span></div>
+            <div><strong>Địa Chỉ:</strong> @Model.RecipientAddress, @Model.District, @Model.City</div>
+            @if (!Model.IsAnonymous)
+            {
+                <div><strong>Người Gửi:</strong> @Model.SenderName (@Model.SenderPhone)</div>
+            }
+            else
+            {
+                <div><strong>Người Gửi:</strong> <em>[Ẩn danh theo yêu cầu khách hàng]</em></div>
+            }
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Tên Sản Phẩm Hoa / Phụ Kiện</th>
+                    <th style="width: 70px; text-align: center;">SL</th>
+                    @if (!hidePrice)
+                    {
+                        <th style="width: 120px; text-align: right;">Thành Tiền</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderDetails)
+                {
+                    <tr>
+                        <td><strong>@item.ProductName</strong></td>
+                        <td style="text-align: center;">@item.Quantity</td>
+                        @if (!hidePrice)
+                        {
+                            <td style="text-align: right;">@item.TotalPrice.ToString("N0") đ</td>
+                        }
+                    </tr>
+                }
+                @foreach (var addon in Model.OrderAddons)
+                {
+                    <tr>
+                        <td>+ @addon.AddonName</td>
+                        <td style="text-align: center;">@addon.Quantity</td>
+                        @if (!hidePrice)
+                        {
+                            <td style="text-align: right;">@addon.TotalPrice.ToString("N0") đ</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (!hidePrice)
+        {
+            <div style="text-align: right; font-size: 16px; font-weight: bold; margin-bottom: 14px;">
+                Tổng Tiền Thu Khách: @(Model.PaymentStatus == "Paid" ? "0 đ (ĐÃ THANH TOÁN TRƯỚC)" : Model.TotalAmount.ToString("N0") + " đ (THU TIỀN MẶT COD)")
+            </div>
+        }
+        else
+        {
+            <div style="text-align: right; font-size: 14px; font-weight: bold; margin-bottom: 14px; color: #2e7d32;">
+                ĐƠN HÀNG TẶNG - KHÔNG THU TIỀN NGƯỜI NHẬN
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.CardMessage))
+        {
+            <div class="card-msg">
+                <strong>Lời chúc viết lên thiệp:</strong><br/>
+                "@Model.CardMessage"
+            </div>
+        }
+
+        <div style="margin-top: 24px; display: flex; justify-content: space-between; text-align: center;">
+            <div>
+                <strong>Người Nhận Hoa</strong><br/>
+                <em>(Ký và ghi rõ họ tên)</em>
+            </div>
+            <div>
+                <strong>Shipper Giao Hoa</strong><br/>
+                <em>(Ký xác nhận hoa nguyên vẹn)</em>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

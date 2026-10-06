@@ -1,0 +1,108 @@
+@model FlowerShop.Models.Entities.Product
+@{
+    ViewBag.Title = "Chỉnh Sửa Mẫu Hoa #" + Model.Id + " - Admin";
+}
+
+<div style="max-width: 900px; margin-bottom: 24px;">
+    <a href="/Admin/Product" style="font-size: 0.85rem; color: var(--admin-primary); margin-bottom: 8px; display: inline-block;">
+        <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách mẫu hoa
+    </a>
+    <h1 class="font-serif" style="font-size: 1.8rem; margin: 0; color: var(--admin-dark);">Chỉnh Sửa Mẫu Hoa: @Model.Name</h1>
+</div>
+
+<div class="admin-card-box" style="max-width: 900px;">
+    @using (Html.BeginForm("Edit", "Product", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.Slug)
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Tên mẫu hoa *</label>
+                @Html.TextBoxFor(m => m.Name, new { required = "required", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Mã SKU</label>
+                @Html.TextBoxFor(m => m.SKU, new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Danh mục dáng cắm *</label>
+                @Html.DropDownList("CategoryId", null, new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Chủ đề dịp tặng</label>
+                @Html.DropDownList("OccasionId", null, "-- Chọn dịp --", new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Loài hoa chính</label>
+                @Html.DropDownList("FlowerTypeId", null, "-- Chọn loài hoa --", new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Giá bán (đ) *</label>
+                @Html.TextBoxFor(m => m.Price, new { type = "number", required = "required", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Giá khuyến mãi (đ)</label>
+                @Html.TextBoxFor(m => m.SalePrice, new { type = "number", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Số lượng tồn</label>
+                @Html.TextBoxFor(m => m.StockQuantity, new { type = "number", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Tông màu</label>
+                @Html.TextBoxFor(m => m.ColorTone, new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Link ảnh đại diện chính (URL) *</label>
+            @Html.TextBoxFor(m => m.MainImageUrl, new { required = "required", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Mô tả ngắn</label>
+            @Html.TextAreaFor(m => m.ShortDescription, new { rows = 2, style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none; font-family: inherit;" })
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Ý nghĩa & Mô tả chi tiết</label>
+            @Html.TextAreaFor(m => m.FullDescription, new { rows = 4, style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none; font-family: inherit;" })
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Hướng dẫn chăm sóc hoa</label>
+            @Html.TextAreaFor(m => m.FlowerCareGuide, new { rows = 2, style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none; font-family: inherit;" })
+        </div>
+
+        <div style="display: flex; gap: 24px; margin-bottom: 24px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                @Html.CheckBoxFor(m => m.IsFeatured)
+                <span>Hoa Nổi Bật</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                @Html.CheckBoxFor(m => m.IsBestSeller)
+                <span>Hoa Bán Chạy</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                @Html.CheckBoxFor(m => m.IsFlashSale)
+                <span>Flash Sale Giờ Vàng</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                @Html.CheckBoxFor(m => m.IsActive)
+                <span>Đang Bán</span>
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="padding: 12px 28px;">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi
+        </button>
+    }
+</div>

@@ -1,0 +1,257 @@
+@model FlowerShop.Models.ViewModels.CheckoutViewModel
+@{
+    ViewBag.Title = "Thanh Toán Đặt Hoa - Bloom & Grace";
+}
+
+<div class="section" style="padding-top: 40px; max-width: 1200px;">
+    <h1 class="font-serif" style="font-size: 2.2rem; margin-bottom: 28px; color: var(--dark);">Thanh Toán & Đặt Hoa</h1>
+
+    @using (Html.BeginForm("PlaceOrder", "Checkout", FormMethod.Post, new { id = "checkoutForm" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(true, "", new { @class = "text-danger", style = "background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; margin-bottom: 20px;" })
+
+        <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 40px; align-items: start;">
+            <!-- Left: Form Sections -->
+            <div style="display: flex; flex-direction: column; gap: 28px;">
+
+                <!-- 1. Thông Tin Người Đặt (Sender) -->
+                <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px;">
+                        <i class="fa-solid fa-user" style="color: var(--primary); font-size: 1.2rem;"></i>
+                        <h3 class="font-serif" style="font-size: 1.2rem; margin: 0;">1. Thông Tin Người Đặt Hoa (Người Gửi)</h3>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Họ và tên của bạn *</label>
+                            @Html.TextBoxFor(m => m.SenderName, new { @class = "form-control", placeholder = "Ví dụ: Nguyễn Văn A", style = "width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" })
+                            @Html.ValidationMessageFor(m => m.SenderName, "", new { style = "color: #c62828; font-size: 0.78rem;" })
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Số điện thoại của bạn *</label>
+                            @Html.TextBoxFor(m => m.SenderPhone, new { @class = "form-control", placeholder = "Ví dụ: 0909123456", style = "width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" })
+                            @Html.ValidationMessageFor(m => m.SenderPhone, "", new { style = "color: #c62828; font-size: 0.78rem;" })
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Email nhận hóa đơn điện tử</label>
+                        @Html.TextBoxFor(m => m.SenderEmail, new { @class = "form-control", placeholder = "email@example.com", style = "width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" })
+                    </div>
+                </div>
+
+                <!-- 2. Thông Tin Người Nhận (Recipient) -->
+                <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-location-dot" style="color: var(--primary); font-size: 1.2rem;"></i>
+                            <h3 class="font-serif" style="font-size: 1.2rem; margin: 0;">2. Thông Tin Người Nhận Hoa</h3>
+                        </div>
+
+                        <!-- Secret Admirer Toggle -->
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: var(--primary); cursor: pointer; background: var(--primary-light); padding: 6px 12px; border-radius: 20px;">
+                            @Html.CheckBoxFor(m => m.IsAnonymous)
+                            <span><i class="fa-solid fa-mask"></i> Tặng bí mật (Ẩn danh)</span>
+                        </label>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Họ tên người nhận *</label>
+                            @Html.TextBoxFor(m => m.RecipientName, new { @class = "form-control", placeholder = "Tên người nhận hoa", style = "width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" })
+                            @Html.ValidationMessageFor(m => m.RecipientName, "", new { style = "color: #c62828; font-size: 0.78rem;" })
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Số điện thoại người nhận *</label>
+                            @Html.TextBoxFor(m => m.RecipientPhone, new { @class = "form-control", placeholder = "Số ĐT nhận hàng", style = "width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" })
+                            @Html.ValidationMessageFor(m => m.RecipientPhone, "", new { style = "color: #c62828; font-size: 0.78rem;" })
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Địa chỉ giao hoa chi tiết (Số nhà, tên đường, tòa nhà) *</label>
+                        @Html.TextBoxFor(m => m.RecipientAddress, new { @class = "form-control", placeholder = "Ví dụ: Tầng 8, Tòa nhà Vincom Center, 72 Lê Thánh Tôn", style = "width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" })
+                        @Html.ValidationMessageFor(m => m.RecipientAddress, "", new { style = "color: #c62828; font-size: 0.78rem;" })
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Quận / Huyện</label>
+                            @Html.TextBoxFor(m => m.District, new { @class = "form-control", placeholder = "Quận 1, Quận 3, Bình Thạnh...", style = "width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" })
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Tỉnh / Thành phố</label>
+                            @Html.TextBoxFor(m => m.City, new { @class = "form-control", style = "width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" })
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Ngày & Khung Giờ Giao Hoa -->
+                <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px;">
+                        <i class="fa-solid fa-clock" style="color: var(--primary); font-size: 1.2rem;"></i>
+                        <h3 class="font-serif" style="font-size: 1.2rem; margin: 0;">3. Thời Gian Nhận Hoa Chính Xác</h3>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Ngày giao *</label>
+                            <input type="date" name="DeliveryDate" value="@Model.DeliveryDate.ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" style="width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-family: inherit;" />
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Khung giờ giao *</label>
+                            <select name="DeliveryTimeSlot" style="width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-family: inherit;">
+                                <option value="Hỏa tốc trong 2 giờ">⚡ Giao Hỏa Tốc (trong vòng 60-120 phút)</option>
+                                <option value="08:00 - 10:00" selected>08:00 - 10:00 (Buổi sáng)</option>
+                                <option value="10:00 - 12:00">10:00 - 12:00 (Trưa)</option>
+                                <option value="13:00 - 15:00">13:00 - 15:00 (Đầu giờ chiều)</option>
+                                <option value="15:00 - 17:00">15:00 - 17:00 (Cuối giờ chiều)</option>
+                                <option value="18:00 - 20:00">18:00 - 20:00 (Buổi tối lãng mạn)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Lời Chúc Thiệp & Ghi Chú Cắm Hoa -->
+                <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-pen-fancy" style="color: var(--primary); font-size: 1.2rem;"></i>
+                            <h3 class="font-serif" style="font-size: 1.2rem; margin: 0;">4. Thông Điệp Yêu Thương</h3>
+                        </div>
+                        <button type="button" onclick="document.getElementById('chatbotTriggerBtn').click();" class="btn btn-secondary btn-sm" style="font-size: 0.8rem;">
+                            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> Gợi Ý Lời Chúc Bằng AI
+                        </button>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Lời chúc viết lên thiệp tặng kèm:</label>
+                        @Html.TextAreaFor(m => m.CardMessage, new { rows = 3, placeholder = "Nhập lời chúc chân thành nghệ nhân sẽ nắn nót viết tay lên thiệp...", style = "width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-family: inherit; resize: none;" })
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Ghi chú riêng cho nghệ nhân cắm hoa hoặc Shipper:</label>
+                        @Html.TextBoxFor(m => m.OrderNotes, new { placeholder = "Ví dụ: Giao lên lầu 3 gọi trước 15 phút...", style = "width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" })
+                    </div>
+                </div>
+
+                <!-- 5. Phương Thức Thanh Toán -->
+                <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px;">
+                        <i class="fa-solid fa-credit-card" style="color: var(--primary); font-size: 1.2rem;"></i>
+                        <h3 class="font-serif" style="font-size: 1.2rem; margin: 0;">5. Chọn Phương Thức Thanh Toán</h3>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- VNPAY -->
+                        <label style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 2px solid var(--primary); border-radius: 12px; cursor: pointer; background: #fff;">
+                            <input type="radio" name="PaymentMethod" value="VNPAY" checked />
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 0.95rem; color: #005baa;"><i class="fa-solid fa-qrcode"></i> Cổng VNPAY (QR Pay, Thẻ ATM 30+ Ngân Hàng, Visa/Master)</div>
+                                <div style="font-size: 0.8rem; color: #666;">Quét mã thanh toán tức thì qua Mobile Banking của Vietcombank, BIDV, Techcombank, MB, MoMo...</div>
+                            </div>
+                        </label>
+
+                        <!-- STRIPE -->
+                        <label style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; background: #fff;">
+                            <input type="radio" name="PaymentMethod" value="STRIPE" />
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 0.95rem; color: #635bff;"><i class="fa-brands fa-stripe"></i> Cổng Quốc Tế Stripe (Credit / Debit Card)</div>
+                                <div style="font-size: 0.8rem; color: #666;">Dành riêng cho khách Kiều Bào hoặc thẻ quốc tế (Visa, Mastercard, Amex). Bảo mật chuẩn PCI-DSS 3D Secure.</div>
+                            </div>
+                        </label>
+
+                        <!-- VIETQR -->
+                        <label style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; background: #fff;">
+                            <input type="radio" name="PaymentMethod" value="VIETQR" />
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 0.95rem; color: #005030;"><i class="fa-solid fa-building-columns"></i> Quét Mã VietQR Chuyển Khoản Nhanh 24/7</div>
+                                <div style="font-size: 0.8rem; color: #666;">Tự động chèn đúng số tiền và nội dung chuyển khoản, không sợ nhầm lẫn.</div>
+                            </div>
+                        </label>
+
+                        <!-- COD -->
+                        <label style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; background: #fff;">
+                            <input type="radio" name="PaymentMethod" value="COD" />
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 0.95rem; color: #333;"><i class="fa-solid fa-money-bill-wave"></i> Thanh Toán Tiền Mặt Khi Nhận Hoa (COD)</div>
+                                <div style="font-size: 0.8rem; color: #666;">Thanh toán cho Shipper sau khi kiểm tra hoa tươi nguyên vẹn (chỉ áp dụng người đặt tự nhận).</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Order Summary Sticky Box -->
+            <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 28px; box-shadow: var(--shadow-md); position: sticky; top: 100px;">
+                <h3 class="font-serif" style="font-size: 1.3rem; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">Đơn Hàng Của Bạn</h3>
+
+                <!-- Mini Items List -->
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; max-height: 250px; overflow-y: auto;">
+                    @foreach (var item in Model.Cart.Items)
+                    {
+                        <div style="display: flex; gap: 10px; align-items: center; font-size: 0.88rem;">
+                            <img src="@item.ImageUrl" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;" />
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; line-height: 1.2;">@item.ProductName</div>
+                                <div style="color: var(--text-muted); font-size: 0.8rem;">Số lượng: @item.Quantity</div>
+                            </div>
+                            <div style="font-weight: 700;">@item.TotalPrice.ToString("N0") đ</div>
+                        </div>
+                    }
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); padding-top: 16px; margin-bottom: 20px; font-size: 0.92rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Tạm tính:</span>
+                        <strong>@Model.Cart.SubTotal.ToString("N0") đ</strong>
+                    </div>
+                    @if (Model.Cart.AddonTotal > 0)
+                    {
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-muted);">Phụ kiện:</span>
+                            <span>+@Model.Cart.AddonTotal.ToString("N0") đ</span>
+                        </div>
+                    }
+                    @if (Model.Cart.DiscountAmount > 0)
+                    {
+                        <div style="display: flex; justify-content: space-between; color: #2e7d32;">
+                            <span>Giảm giá:</span>
+                            <span>-@Model.Cart.DiscountAmount.ToString("N0") đ</span>
+                        </div>
+                    }
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Phí giao hoa:</span>
+                        <span>@(Model.Cart.ShippingFee == 0 ? "Miễn phí" : Model.Cart.ShippingFee.ToString("N0") + " đ")</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 1.35rem; font-weight: 700; color: var(--primary); border-top: 1px solid var(--border); padding-top: 12px;">
+                        <span>Tổng Thanh Toán:</span>
+                        <span>@Model.Cart.TotalAmount.ToString("N0") đ</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 1.05rem;">
+                    <i class="fa-solid fa-lock"></i> Xác Nhận & Thanh Toán
+                </button>
+
+                <div style="text-align: center; margin-top: 14px; font-size: 0.78rem; color: #888;">
+                    <i class="fa-solid fa-shield-halved"></i> Thông tin được mã hóa bảo mật 256-bit SSL
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        document.querySelectorAll('input[name="PaymentMethod"]').forEach(input => {
+            input.addEventListener('change', function() {
+                document.querySelectorAll('input[name="PaymentMethod"]').forEach(i => {
+                    i.closest('label').style.borderColor = 'var(--border)';
+                });
+                this.closest('label').style.borderColor = 'var(--primary)';
+            });
+        });
+    </script>
+}

@@ -1,0 +1,126 @@
+@model FlowerShop.Models.ViewModels.AdminDashboardViewModel
+@{
+    ViewBag.Title = "Bảng Điều Khiển Kinh Doanh - Admin Bloom & Grace";
+}
+
+<div style="margin-bottom: 28px;">
+    <h1 class="font-serif" style="font-size: 1.8rem; margin-bottom: 6px; color: var(--admin-dark);">Tổng Quan Hoạt Động Cửa Hàng</h1>
+    <p style="color: var(--admin-text-muted); font-size: 0.95rem;">Cập nhật doanh thu, trạng thái đơn hoa và lịch giao hàng theo thời gian thực.</p>
+</div>
+
+<!-- 1. Metric Cards -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div>
+            <div class="metric-title">Doanh Thu Hôm Nay</div>
+            <div class="metric-value">@Model.TodayRevenue.ToString("N0") đ</div>
+        </div>
+        <div class="metric-icon metric-primary">
+            <i class="fa-solid fa-coins"></i>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div>
+            <div class="metric-title">Doanh Thu Tháng Này</div>
+            <div class="metric-value">@Model.MonthRevenue.ToString("N0") đ</div>
+        </div>
+        <div class="metric-icon metric-success">
+            <i class="fa-solid fa-chart-line"></i>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div>
+            <div class="metric-title">Đơn Cần Giao Gấp Hôm Nay</div>
+            <div class="metric-value" style="color: #c84b61;">@Model.UrgentDeliveriesCount đơn</div>
+        </div>
+        <div class="metric-icon metric-warning">
+            <i class="fa-solid fa-clock"></i>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div>
+            <div class="metric-title">Đơn Chờ Nghệ Nhân Cắm</div>
+            <div class="metric-value">@Model.PendingOrdersCount đơn</div>
+        </div>
+        <div class="metric-icon metric-info">
+            <i class="fa-solid fa-seedling"></i>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Recent Orders Table -->
+<div class="admin-card-box">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">Đơn Hoa Mới Nhất Cần Xử Lý</h3>
+        <a href="/Admin/Order" class="btn btn-secondary btn-sm" style="font-size: 0.85rem;">Xem Toàn Bộ Đơn</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Mã Đơn</th>
+                    <th>Người Nhận & Địa Chỉ</th>
+                    <th>Khung Giờ Giao</th>
+                    <th>Tổng Tiền</th>
+                    <th>Cổng TT</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.RecentOrders.Any())
+                {
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #888; padding: 30px;">Chưa có đơn hàng nào phát sinh hôm nay.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var order in Model.RecentOrders)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@order.OrderCode</strong>
+                                @if (order.IsAnonymous)
+                                {
+                                    <span style="display: block; font-size: 0.72rem; color: #c84b61;"><i class="fa-solid fa-mask"></i> Tặng bí mật</span>
+                                }
+                            </td>
+                            <td>
+                                <div style="font-weight: 600;">@order.RecipientName</div>
+                                <div style="font-size: 0.8rem; color: #666; max-width: 250px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">@order.RecipientAddress</div>
+                            </td>
+                            <td>
+                                <div>@order.DeliveryDate.ToString("dd/MM/yyyy")</div>
+                                <div style="font-size: 0.8rem; color: #c84b61; font-weight: 600;">@order.DeliveryTimeSlot</div>
+                            </td>
+                            <td>
+                                <strong>@order.TotalAmount.ToString("N0") đ</strong>
+                            </td>
+                            <td>
+                                <span class="status-pill pill-confirmed">@order.PaymentMethod (@order.PaymentStatus)</span>
+                            </td>
+                            <td>
+                                @{
+                                    string pillClass = "pill-pending";
+                                    if (order.OrderStatus == "Confirmed") pillClass = "pill-confirmed";
+                                    if (order.OrderStatus == "Arranging") pillClass = "pill-arranging";
+                                    if (order.OrderStatus == "Shipping") pillClass = "pill-shipping";
+                                    if (order.OrderStatus == "Delivered") pillClass = "pill-delivered";
+                                }
+                                <span class="status-pill @pillClass">@order.OrderStatus</span>
+                            </td>
+                            <td>
+                                <a href="/Admin/Order/Details/@order.Id" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; padding: 6px 12px;">Chi Tiết</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,99 @@
+@{
+    ViewBag.Title = "Cấu Hình Hệ Thống & Cổng Thanh Toán - Admin";
+}
+
+<div style="max-width: 900px; margin-bottom: 24px;">
+    <h1 class="font-serif" style="font-size: 1.8rem; margin: 0; color: var(--admin-dark);">Cấu Hình Hệ Thống & Cổng Thanh Toán</h1>
+    <p style="color: var(--admin-text-muted); font-size: 0.95rem; margin-top: 4px;">Thiết lập các thông số kết nối VNPay, Stripe, VietQR và AI Florist Chatbot.</p>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 28px; max-width: 900px;">
+    <!-- VNPay Config Card -->
+    <div class="admin-card-box">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+            <i class="fa-solid fa-qrcode" style="color: #005baa; font-size: 1.4rem;"></i>
+            <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">1. Cổng Thanh Toán VNPay</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">vnp_TmnCode (Mã Website):</label>
+                <input type="text" value="DEMOSHOP" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">vnp_HashSecret (Chuỗi bí mật):</label>
+                <input type="password" value="SECRETKEY1234567890ABCDEF" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+        </div>
+        <div>
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">VNPay Payment URL:</label>
+            <input type="text" value="https://sandbox.vnpayment.vn/paymentv2/vpcpay.html" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+        </div>
+    </div>
+
+    <!-- Stripe Config Card -->
+    <div class="admin-card-box">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+            <i class="fa-brands fa-stripe" style="color: #635bff; font-size: 2rem;"></i>
+            <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">2. Cổng Thanh Toán Thẻ Quốc Tế Stripe</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Publishable Key (pk_test_...):</label>
+                <input type="text" value="pk_test_TYoo61E7ZXqStWST8qjekqqQ" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Secret Key (sk_test_...):</label>
+                <input type="password" value="sk_test_your_stripe_secret_key_here" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+        </div>
+    </div>
+
+    <!-- VietQR Config Card -->
+    <div class="admin-card-box">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+            <i class="fa-solid fa-building-columns" style="color: #005030; font-size: 1.4rem;"></i>
+            <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">3. Cổng Chuyển Khoản Tự Động VietQR</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Mã ngân hàng (Bank ID):</label>
+                <input type="text" value="MB" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Số tài khoản nhận tiền:</label>
+                <input type="text" value="0909123456888" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Tên chủ tài khoản:</label>
+                <input type="text" value="TIEM HOA FLOWER BOUTIQUE" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot AI Config Card -->
+    <div class="admin-card-box">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--admin-primary); font-size: 1.4rem;"></i>
+            <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">4. Cấu Hình Trợ Lý Ảo Florist AI</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Tên đại diện Florist:</label>
+                <input type="text" value="Hương Lan" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Gemini / OpenAI API Key (Tùy chọn):</label>
+                <input type="password" placeholder="AIzaSy..." class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+        </div>
+        <div style="font-size: 0.82rem; color: #888;">
+            * Nếu để trống API Key, chatbot sẽ kích hoạt bộ máy khuyến nghị thông minh có sẵn phân tích dịp tặng, ngân sách và tra cứu đơn hàng trực tiếp từ cơ sở dữ liệu.
+        </div>
+    </div>
+
+    <div>
+        <button type="button" onclick="Swal.fire('Thành công', 'Đã lưu cấu hình tham số hệ thống!', 'success')" class="btn btn-primary" style="padding: 14px 32px;">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu Tất Cả Cấu Hình
+        </button>
+    </div>
+</div>

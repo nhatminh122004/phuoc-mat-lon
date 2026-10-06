@@ -1,0 +1,58 @@
+@{
+    ViewBag.Title = "Liên Hệ - Bloom & Grace";
+}
+
+<div class="section" style="padding-top: 50px; max-width: 1100px;">
+    <div class="section-header">
+        <span class="section-tag">Kết Nối Với Chúng Tôi</span>
+        <h1 class="section-title">Hệ Thống Showroom & Hotline</h1>
+        <p class="section-desc">Chúng tôi luôn lắng nghe và sẵn sàng tư vấn cho bạn 24/7 để tạo nên những tác phẩm hoa hoàn hảo nhất.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 50px;">
+        <div style="background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 32px; box-shadow: var(--shadow-sm); line-height: 1.8;">
+            <h3 class="font-serif" style="font-size: 1.4rem; margin-bottom: 20px;">Thông Tin Trực Tiếp</h3>
+            <div style="margin-bottom: 16px;">
+                <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 24px;"></i>
+                <strong>Showroom Quận 1:</strong> 128 Đường Hoa Hồng, Phường Bến Nghé, Quận 1, TP.HCM
+            </div>
+            <div style="margin-bottom: 16px;">
+                <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 24px;"></i>
+                <strong>Showroom Ba Đình:</strong> 45 Phố Liễu Giai, Ba Đình, Hà Nội
+            </div>
+            <div style="margin-bottom: 16px;">
+                <i class="fa-solid fa-phone" style="color: var(--primary); width: 24px;"></i>
+                <strong>Tổng đài tư vấn:</strong> 1900 6868 (Phím 1 đặt hoa, Phím 2 hỗ trợ đơn)
+            </div>
+            <div style="margin-bottom: 16px;">
+                <i class="fa-solid fa-envelope" style="color: var(--primary); width: 24px;"></i>
+                <strong>Email:</strong> contact@bloomgrace.vn
+            </div>
+            <div>
+                <i class="fa-solid fa-clock" style="color: var(--primary); width: 24px;"></i>
+                <strong>Giờ mở cửa:</strong> 06:30 - 22:30 (Mở cửa tất cả các ngày trong tuần & lễ tết)
+            </div>
+        </div>
+
+        <div style="background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 32px; box-shadow: var(--shadow-sm);">
+            <h3 class="font-serif" style="font-size: 1.4rem; margin-bottom: 20px;">Gửi Tin Nhắn Yêu Cầu</h3>
+            <form onsubmit="event.preventDefault(); Swal.fire('Gửi tin nhắn thành công!', 'Chuyên viên tư vấn sẽ liên hệ lại với bạn trong vòng 15 phút.', 'success');">
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Họ và tên của bạn</label>
+                    <input type="text" required placeholder="Nguyễn Văn A" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" />
+                </div>
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Số điện thoại</label>
+                    <input type="tel" required placeholder="0909xxxxxx" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none;" />
+                </div>
+                <div style="margin-bottom: 18px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Nội dung cần tư vấn</label>
+                    <textarea rows="3" placeholder="Yêu cầu đặt hoa sự kiện, tiệc cưới, hoa định kỳ..." style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-family: inherit; resize: none;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fa-solid fa-paper-plane"></i> Gửi Yêu Cầu
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

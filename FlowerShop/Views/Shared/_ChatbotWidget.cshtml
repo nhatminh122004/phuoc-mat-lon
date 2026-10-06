@@ -1,0 +1,58 @@
+<div class="chatbot-widget-container">
+    <!-- Nút kích hoạt cửa sổ chat -->
+    <div class="chatbot-trigger-btn" id="chatbotTriggerBtn" title="Tư vấn chọn hoa cùng AI Florist">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <div class="chatbot-badge-pulse"></div>
+    </div>
+
+    <!-- Cửa sổ Chatbot AI -->
+    <div class="chatbot-window" id="chatbotWindow">
+        <!-- Header -->
+        <div class="chatbot-header">
+            <div class="chatbot-florist-info">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="chatbot-avatar" alt="Florist AI" />
+                <div>
+                    <h4 class="chatbot-title">Hương Lan • Florist AI</h4>
+                    <div class="chatbot-status">
+                        <span class="status-dot"></span> Sẵn sàng tư vấn chọn hoa & quà
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-close-chatbot" id="chatbotCloseBtn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Body / Danh sách tin nhắn -->
+        <div class="chatbot-body" id="chatbotBody">
+            <div class="chat-bubble chat-bubble-bot">
+                Dạ chào bạn! Em là <strong>Hương Lan</strong> - Trợ lý ảo của tiệm hoa 🌸<br/><br/>
+                Em có thể giúp bạn chọn mẫu hoa phù hợp nhất, gợi ý lời chúc thiệp ý nghĩa, hoặc tra cứu đơn hàng giúp bạn ạ!
+            </div>
+        </div>
+
+        <!-- Quick Chips Kịch Bản Nhanh -->
+        <div class="chatbot-quick-chips">
+            <button type="button" class="chip-btn js-chat-chip" data-prompt="Tư vấn hoa sinh nhật bạn gái dưới 600k">
+                <i class="fa-solid fa-cake-candles"></i> Sinh nhật bạn gái
+            </button>
+            <button type="button" class="chip-btn js-chat-chip" data-prompt="Gợi ý mẫu hoa tặng Mẹ ý nghĩa">
+                <i class="fa-solid fa-heart"></i> Hoa tặng Mẹ
+            </button>
+            <button type="button" class="chip-btn js-chat-chip" data-prompt="Gợi ý lời chúc thiệp tình yêu lãng mạn">
+                <i class="fa-solid fa-pen-nib"></i> Viết lời chúc thiệp
+            </button>
+            <button type="button" class="chip-btn js-chat-chip" data-prompt="Tra cứu đơn hàng">
+                <i class="fa-solid fa-truck-fast"></i> Tra cứu đơn hàng
+            </button>
+        </div>
+
+        <!-- Footer / Soạn tin -->
+        <div class="chatbot-footer">
+            <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Hỏi mẫu hoa, ngân sách, dịp tặng..." />
+            <button type="button" id="chatbotSendBtn" class="chatbot-send-btn">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>

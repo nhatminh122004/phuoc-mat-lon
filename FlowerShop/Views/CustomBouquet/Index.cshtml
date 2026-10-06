@@ -1,0 +1,181 @@
+@model FlowerShop.Models.ViewModels.CustomBouquetViewModel
+@{
+    ViewBag.Title = "Tự Thiết Kế Bó Hoa Theo Ý Thích - Bloom & Grace";
+}
+
+<div class="section" style="padding-top: 40px; max-width: 1200px;">
+    <div class="section-header" style="text-align: left; margin-bottom: 36px;">
+        <span class="section-tag"><i class="fa-solid fa-wand-magic-sparkles"></i> Sáng Tạo Không Giới Hạn</span>
+        <h1 class="section-title">Tự Thiết Kế Bó Hoa Độc Bản</h1>
+        <p class="section-desc">Hãy tự tay lựa chọn dáng cắm, loài hoa chủ đạo, số lượng cành và màu giấy gói để tạo nên món quà mang đậm dấu ấn cá nhân của bạn.</p>
+    </div>
+
+    <form action="/CustomBouquet/AddToCart" method="post" id="customBouquetForm">
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px; align-items: start;">
+            <!-- Left: 3-Step Wizard Options -->
+            <div style="display: flex; flex-direction: column; gap: 32px;">
+                
+                <!-- BƯỚC 1: CHỌN DÁNG CẮM -->
+                <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <span style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;">1</span>
+                        <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">Chọn Phong Cách Cắm Hoa</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px;">
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="wrapStyle" value="BoTron" checked style="display: none;" />
+                            <div class="style-choice-card" style="border: 2px solid var(--primary); border-radius: 12px; padding: 14px; text-align: center; background: #fff;">
+                                <i class="fa-solid fa-circle-notch" style="font-size: 1.8rem; color: var(--primary); margin-bottom: 8px;"></i>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Bó Tròn</div>
+                                <div style="font-size: 0.75rem; color: #888;">Tiêu chuẩn</div>
+                            </div>
+                        </label>
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="wrapStyle" value="BoDai" style="display: none;" />
+                            <div class="style-choice-card" style="border: 2px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; background: #fff;">
+                                <i class="fa-solid fa-spa" style="font-size: 1.8rem; color: #888; margin-bottom: 8px;"></i>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Bó Dài</div>
+                                <div style="font-size: 0.75rem; color: #888;">Hàn Quốc</div>
+                            </div>
+                        </label>
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="wrapStyle" value="GioHoa" style="display: none;" />
+                            <div class="style-choice-card" style="border: 2px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; background: #fff;">
+                                <i class="fa-solid fa-basket-shopping" style="font-size: 1.8rem; color: #888; margin-bottom: 8px;"></i>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Giỏ Mây</div>
+                                <div style="font-size: 0.75rem; color: #888;">+150k</div>
+                            </div>
+                        </label>
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="wrapStyle" value="HopMica" style="display: none;" />
+                            <div class="style-choice-card" style="border: 2px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; background: #fff;">
+                                <i class="fa-solid fa-box-open" style="font-size: 1.8rem; color: #888; margin-bottom: 8px;"></i>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Hộp Mica LED</div>
+                                <div style="font-size: 0.75rem; color: #888;">+250k</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- BƯỚC 2: CHỌN HOA VÀ SỐ LƯỢNG CÀNH -->
+                <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <span style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;">2</span>
+                        <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">Chọn Hoa Chủ Đạo & Số Lượng Cành</h3>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                        @for (int i = 0; i < Model.MainFlowers.Count; i++)
+                        {
+                            var f = Model.MainFlowers[i];
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="mainFlowerId" value="@f.Id" @(i == 0 ? "checked" : "") style="display: none;" />
+                                <div class="flower-choice-card" style="border: 2px solid @(i == 0 ? "var(--primary)" : "var(--border)"); border-radius: 12px; padding: 10px; text-align: center; background: #fff;">
+                                    <img src="@f.MainImageUrl" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin: 0 auto 8px;" />
+                                    <div style="font-size: 0.82rem; font-weight: 600; line-height: 1.2;">@f.Name</div>
+                                </div>
+                            </label>
+                        }
+                    </div>
+
+                    <!-- Số lượng cành ý nghĩa -->
+                    <div style="background: var(--bg-body); border-radius: 14px; padding: 16px;">
+                        <label style="font-size: 0.9rem; font-weight: 700; display: block; margin-bottom: 8px;">Số Lượng Cành Hoa:</label>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('mainFlowerQty').value = 9; document.getElementById('mainFlowerQty').dispatchEvent(new Event('input'));">9 cành (Vĩnh cửu)</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('mainFlowerQty').value = 19; document.getElementById('mainFlowerQty').dispatchEvent(new Event('input'));">19 cành (Chờ đợi)</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('mainFlowerQty').value = 33; document.getElementById('mainFlowerQty').dispatchEvent(new Event('input'));">33 cành (Say đắm)</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('mainFlowerQty').value = 99; document.getElementById('mainFlowerQty').dispatchEvent(new Event('input'));">99 cành (Mãi mãi)</button>
+                            <input type="number" name="mainFlowerQuantity" id="mainFlowerQty" value="19" min="5" max="199" style="width: 70px; padding: 8px; border-radius: 8px; border: 1px solid var(--border); font-weight: 700; text-align: center;" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BƯỚC 3: GIẤY GÓI & RUY BĂNG -->
+                <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <span style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;">3</span>
+                        <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">Màu Giấy Gói & Lời Chúc Thiệp</h3>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="font-size: 0.88rem; font-weight: 600; display: block; margin-bottom: 6px;">Màu Giấy Gói:</label>
+                            <select name="paperColor" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); outline: none;">
+                                <option value="HongPastel">Hồng Phấn Pastel Hàn Quốc</option>
+                                <option value="DenSangTrong">Đen Mờ Sang Trọng Viền Vàng</option>
+                                <option value="KraftVintage">Giấy Kraft Mộc Vintage</option>
+                                <option value="TrangTinhKhoi">Trắng Mờ Tinh Khôi</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.88rem; font-weight: 600; display: block; margin-bottom: 6px;">Màu Ruy Băng Nơ:</label>
+                            <select name="ribbonColor" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); outline: none;">
+                                <option value="DoNhung">Đỏ Nhung Hoàng Gia</option>
+                                <option value="KemVang">Kem Vàng Champagne</option>
+                                <option value="HongBaby">Hồng Baby Dịu Dàng</option>
+                                <option value="XanhLa">Xanh Sage Tự Nhiên</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.88rem; font-weight: 600; display: block; margin-bottom: 6px;">Lời Chúc Đi Kèm Thiệp Miễn Phí:</label>
+                        <textarea name="greetingMessage" rows="3" placeholder="Nhập tâm tư tình cảm bạn muốn nghệ nhân viết nắn nót lên thiệp..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); outline: none; font-family: inherit; resize: none;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Live Summary & Price Estimator -->
+            <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 28px; box-shadow: var(--shadow-md); position: sticky; top: 100px;">
+                <h3 class="font-serif" style="font-size: 1.3rem; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">Tóm Tắt Tác Phẩm Hoa</h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; font-size: 0.92rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Công thợ & giấy gói:</span>
+                        <span>Chuẩn nghệ nhân</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Thiệp viết tay:</span>
+                        <span style="color: #2e7d32; font-weight: 600;">Miễn phí tặng kèm</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Duyệt ảnh trước khi giao:</span>
+                        <span style="color: #2e7d32; font-weight: 600;">Có hỗ trợ</span>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg-body); padding: 18px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
+                    <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Ước Tính Tổng Tiền:</div>
+                    <div id="customBouquetPrice" style="font-size: 2rem; font-weight: 700; color: var(--primary);">555.000 đ</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;">
+                    <i class="fa-solid fa-basket-shopping"></i> Thêm Vào Giỏ & Đặt Ngay
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section scripts {
+    <script src="~/Scripts/js/custom-bouquet.js"></script>
+    <script>
+        document.querySelectorAll('input[name="wrapStyle"]').forEach(input => {
+            input.addEventListener('change', function() {
+                document.querySelectorAll('.style-choice-card').forEach(card => {
+                    card.style.borderColor = 'var(--border)';
+                });
+                this.nextElementSibling.style.borderColor = 'var(--primary)';
+            });
+        });
+        document.querySelectorAll('input[name="mainFlowerId"]').forEach(input => {
+            input.addEventListener('change', function() {
+                document.querySelectorAll('.flower-choice-card').forEach(card => {
+                    card.style.borderColor = 'var(--border)';
+                });
+                this.nextElementSibling.style.borderColor = 'var(--primary)';
+            });
+        });
+    </script>
+}
