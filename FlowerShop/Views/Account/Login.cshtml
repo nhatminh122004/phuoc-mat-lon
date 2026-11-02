@@ -1,0 +1,61 @@
+@{
+    ViewBag.Title = "Đăng Nhập - Hữu Phước Florist";
+}
+
+<section class="auth-page-section">
+    <div class="auth-card">
+        <div class="auth-header">
+            <a href="/" class="auth-logo">
+                <i class="fa-solid fa-spa"></i>
+                <span>Hữu Phước<strong>Florist</strong></span>
+            </a>
+            <h1 class="auth-title font-serif">Chào mừng trở lại</h1>
+            <p class="auth-subtitle">Đăng nhập để theo dõi tiến độ bó hoa, quản lý ưu đãi và đặt hoa hỏa tốc dễ dàng hơn.</p>
+        </div>
+
+        <!-- Feedback Alert Container -->
+        <div id="loginAlert" class="auth-alert"></div>
+
+        <form id="loginForm" onsubmit="BloomAuth.handleLogin(event)">
+            <!-- Email Input -->
+            <div class="form-group">
+                <label class="form-label" for="loginEmail">Địa chỉ Email</label>
+                <div class="input-with-icon">
+                    <input type="email" id="loginEmail" class="form-control" placeholder="nhapemail@domain.com" autocomplete="email" />
+                    <i class="fa-regular fa-envelope input-icon"></i>
+                </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="form-group">
+                <label class="form-label" for="loginPassword">Mật khẩu</label>
+                <div class="input-with-icon">
+                    <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" autocomplete="current-password" />
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <button type="button" class="password-toggle-btn" onclick="BloomAuth.togglePassword('loginPassword', this)" title="Hiện/ẩn mật khẩu">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Remember me & Forgot Password -->
+            <div class="form-options">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="rememberMe" checked />
+                    <span>Ghi nhớ đăng nhập</span>
+                </label>
+                <a href="/Account/ForgotPassword" class="auth-link">Quên mật khẩu?</a>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-auth">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng Nhập
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <span>Chưa có tài khoản?</span>
+            <a href="/Account/Register" class="auth-link" style="margin-left: 6px;">Đăng ký ngay</a>
+        </div>
+    </div>
+</section>

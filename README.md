@@ -1,10 +1,10 @@
-# 🌸 Bloom & Grace - Website Bán Hoa Tươi Nghệ Thuật & Quà Tặng Sang Trọng
+# 🌸 Hữu Phước Florist - Website Bán Hoa Tươi Nghệ Thuật & Quà Tặng Sang Trọng
 ### Nền tảng: ASP.NET MVC 5 + C# + Entity Framework 6 + MySQL + VNPay + Stripe + AI Chatbot
 
 ---
 
 ## 🌟 Giới Thiệu Dự Án
-**Bloom & Grace** là hệ thống website thương mại điện tử chuyên biệt cho ngành hoa tươi nghệ thuật và quà tặng cao cấp. Được thiết kế theo phong cách thẩm mỹ *Luxury Floral Boutique* (hồng phấn, xanh sage, vàng champagne, hiệu ứng kính mờ glassmorphism), kết hợp đầy đủ các quy trình nghiệp vụ đặc thù của tiệm hoa hiện đại:
+**Hữu Phước Florist** là hệ thống website thương mại điện tử chuyên biệt cho ngành hoa tươi nghệ thuật và quà tặng cao cấp. Được thiết kế theo phong cách thẩm mỹ *Modern Minimalist Floral Boutique* (Sky Blue - xanh da trời sang trọng), kết hợp đầy đủ các quy trình nghiệp vụ đặc thù của tiệm hoa hiện đại:
 - **Tách biệt người gửi & người nhận**: Hỗ trợ chế độ tặng ẩn danh bí mật (*Secret Admirer*).
 - **Giao hoa hỏa tốc**: Lựa chọn ngày và khung giờ nhận hoa chính xác (khung 60-120 phút).
 - **Duyệt ảnh thực tế trước khi giao**: Thợ cắm hoa chụp ảnh bó hoa hoàn thiện gửi khách duyệt trước khi shipper giao.

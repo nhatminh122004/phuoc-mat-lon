@@ -1,0 +1,83 @@
+@{
+    ViewBag.Title = "Đăng Ký Tài Khoản - Hữu Phước Florist";
+}
+
+<section class="auth-page-section">
+    <div class="auth-card">
+        <div class="auth-header">
+            <a href="/" class="auth-logo">
+                <i class="fa-solid fa-spa"></i>
+                <span>Hữu Phước<strong>Florist</strong></span>
+            </a>
+            <h1 class="auth-title font-serif">Tạo tài khoản mới</h1>
+            <p class="auth-subtitle">Gia nhập cộng đồng yêu hoa để nhận ngay mã giảm giá 10% và trải nghiệm các dịch vụ hoa tươi cao cấp.</p>
+        </div>
+
+        <!-- Feedback Alert Container -->
+        <div id="registerAlert" class="auth-alert"></div>
+
+        <form id="registerForm" onsubmit="BloomAuth.handleRegister(event)">
+            <!-- Full Name -->
+            <div class="form-group">
+                <label class="form-label" for="regFullName">Họ và tên</label>
+                <div class="input-with-icon">
+                    <input type="text" id="regFullName" class="form-control" placeholder="Nguyễn Văn A" autocomplete="name" />
+                    <i class="fa-regular fa-user input-icon"></i>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label class="form-label" for="regEmail">Địa chỉ Email</label>
+                <div class="input-with-icon">
+                    <input type="email" id="regEmail" class="form-control" placeholder="nhapemail@domain.com" autocomplete="email" />
+                    <i class="fa-regular fa-envelope input-icon"></i>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label class="form-label" for="regPassword">Mật khẩu</label>
+                <div class="input-with-icon">
+                    <input type="password" id="regPassword" class="form-control" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password" />
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <button type="button" class="password-toggle-btn" onclick="BloomAuth.togglePassword('regPassword', this)" title="Hiện/ẩn mật khẩu">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+                <label class="form-label" for="regConfirmPassword">Xác nhận mật khẩu</label>
+                <div class="input-with-icon">
+                    <input type="password" id="regConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" autocomplete="new-password" />
+                    <i class="fa-solid fa-shield-halved input-icon"></i>
+                    <button type="button" class="password-toggle-btn" onclick="BloomAuth.togglePassword('regConfirmPassword', this)" title="Hiện/ẩn mật khẩu">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Terms Agreement -->
+            <div class="form-options" style="margin-bottom: 22px;">
+                <label class="checkbox-label" style="align-items: flex-start; line-height: 1.4;">
+                    <input type="checkbox" id="regAgreeTerms" checked style="margin-top: 2px;" />
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">
+                        Tôi đồng ý với <a href="/Home/About" class="auth-link">Điều khoản dịch vụ</a> và <a href="/Home/About" class="auth-link">Chính sách bảo mật</a> của Hữu Phước Florist.
+                    </span>
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="registerSubmitBtn" class="btn btn-primary btn-auth">
+                <i class="fa-solid fa-user-plus"></i> Tạo Tài Khoản
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <span>Đã có tài khoản?</span>
+            <a href="/Account/Login" class="auth-link" style="margin-left: 6px;">Đăng nhập ngay</a>
+        </div>
+    </div>
+</section>

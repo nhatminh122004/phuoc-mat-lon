@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("FlowerShop")]
 [assembly: AssemblyDescription("E-Commerce Flower & Gift Boutique ASP.NET MVC 5")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Bloom & Grace")]
+[assembly: AssemblyCompany("Hữu Phước Florist")]
 [assembly: AssemblyProduct("FlowerShop")]
 [assembly: AssemblyCopyright("Copyright © 2026")]
 [assembly: AssemblyTrademark("")]

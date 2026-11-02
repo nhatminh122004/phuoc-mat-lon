@@ -47,13 +47,27 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(err => console.error('Error loading mini cart:', err));
     }
 
-    // 3. Quick Add to Cart with AJAX
+    // 3. Quick Add to Cart with AJAX & BloomCart Sync
     const quickAddBtns = document.querySelectorAll('.js-quick-add');
     quickAddBtns.forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             const productId = this.getAttribute('data-id');
             const qty = this.getAttribute('data-qty') || 1;
+
+            if (typeof BloomCart !== 'undefined') {
+                const card = this.closest('.product-card');
+                const title = card ? (card.querySelector('.product-title a') || card.querySelector('.product-title')).innerText.trim() : 'Bó Hoa Tươi Nghệ Thuật';
+                const img = card ? (card.querySelector('.product-thumb img') || {}).src : '';
+                const priceText = card ? (card.querySelector('.product-price') || {}).innerText.replace(/[^\d]/g, '') : '850000';
+
+                BloomCart.addToCart({
+                    productId: parseInt(productId, 10),
+                    name: title,
+                    image: img,
+                    price: parseInt(priceText, 10) || 850000
+                }, parseInt(qty, 10) || 1);
+            }
 
             const formData = new FormData();
             formData.append('productId', productId);
@@ -66,16 +80,12 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(res => res.json())
             .then(data => {
-                if (data.success) {
-                    // Cập nhật số lượng giỏ hàng trên header
+                if (data && data.success) {
                     const badge = document.querySelector('.js-cart-count');
                     if (badge) badge.textContent = data.totalItems;
-
-                    // Mở mini cart drawer
-                    openCartDrawer();
                 }
             })
-            .catch(err => console.error('Error adding to cart:', err));
+            .catch(err => console.log('Cart backend sync:', err));
         });
     });
 

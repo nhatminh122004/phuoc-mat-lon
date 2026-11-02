@@ -3,14 +3,14 @@
    ========================================================================== */
 
 :root {
-    --admin-primary: #c84b61;
-    --admin-dark: #1e191a;
-    --admin-sidebar: #282123;
-    --admin-bg: #f4eff1;
+    --admin-primary: #0284C7;
+    --admin-dark: #0F172A;
+    --admin-sidebar: #0F172A;
+    --admin-bg: #F8FAFC;
     --admin-card: #ffffff;
-    --admin-border: #e8dcdf;
-    --admin-text: #332a2c;
-    --admin-text-muted: #827376;
+    --admin-border: #E2E8F0;
+    --admin-text: #0F172A;
+    --admin-text-muted: #64748B;
 }
 
 body.admin-body {

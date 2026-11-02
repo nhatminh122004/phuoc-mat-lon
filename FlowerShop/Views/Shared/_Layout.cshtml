@@ -1,16 +1,16 @@
+@using FlowerShop.Services.Cart
 @{
-    var cart = FlowerShop.Services.Cart.CartService.GetCart(Context);
-    int cartCount = cart.TotalItemsCount;
+    var cart = CartService.GetCart(new HttpContextWrapper(HttpContext.Current));
+    var cartCount = cart.Items.Sum(i => i.Quantity);
 }
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@(ViewBag.Title ?? "Boutique Floral & Luxury Gifts - Hoa Tươi Nghệ Thuật Cao Cấp")</title>
-    <meta name="description" content="Hệ thống hoa tươi nghệ thuật và quà tặng cao cấp. Giao hoa hỏa tốc 60-120 phút, cam kết hoa tươi 100%, thanh toán tiện lợi qua VNPay, Stripe, VietQR." />
+    <title>@ViewBag.Title - Hữu Phước Florist</title>
     
-    <!-- Google Fonts & FontAwesome 6 -->
+    <!-- Google Fonts & FontAwesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -30,16 +30,21 @@
         <span>•</span>
         <span><i class="fa-solid fa-gift"></i> Tặng kèm thiệp hoa nghệ thuật & banner cao cấp mọi đơn hàng</span>
         <span>•</span>
-        <span><i class="fa-solid fa-phone"></i> Hotline 24/7: <strong>1900 6868</strong></span>
+        <span><i class="fa-solid fa-phone"></i> Hotline 24/7: <strong>0377 415 147</strong></span>
     </div>
 
     <!-- 2. Main Luxury Header -->
     <header class="main-header">
         <div class="header-container">
+            <!-- Mobile Menu Toggle Button -->
+            <button type="button" class="btn-mobile-toggle" id="mobileNavToggle" title="Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
             <!-- Brand Logo -->
             <a href="/" class="brand-logo">
                 <i class="fa-solid fa-spa logo-icon"></i>
-                <div class="logo-text">Bloom<span>&Grace</span></div>
+                <div class="logo-text">Hữu Phước<span>Florist</span></div>
             </a>
 
             <!-- Search Bar with Live Suggestions -->
@@ -60,21 +65,74 @@
 
             <!-- Header Action Icons -->
             <div class="header-actions">
-                <a href="/tra-cuu-don-hang" class="btn-action-icon" title="Tra cứu tiến độ đơn hàng">
-                    <i class="fa-solid fa-truck-ramp-box"></i>
-                </a>
+                <!-- User Account Dropdown -->
+                <div class="account-dropdown-wrapper">
+                    <button type="button" class="btn-action-icon" title="Tài khoản khách hàng">
+                        <i class="fa-regular fa-user"></i>
+                    </button>
+                    <div class="account-dropdown-menu">
+                        <!-- Guest State -->
+                        <div class="js-auth-guest">
+                            <a href="/Account/Login"><i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng Nhập</a>
+                            <a href="/Account/Register"><i class="fa-solid fa-user-plus"></i> Đăng Ký Tài Khoản</a>
+                            <div class="account-dropdown-divider"></div>
+                            <a href="/Account/ForgotPassword"><i class="fa-solid fa-key"></i> Quên Mật Khẩu?</a>
+                        </div>
+                        <!-- Logged-in State -->
+                        <div class="js-auth-logged" style="display: none;">
+                            <div class="account-user-info">
+                                <div class="account-user-name js-auth-username">Khách Hàng</div>
+                                <div class="account-user-email js-auth-useremail">user@domain.com</div>
+                            </div>
+                            <a href="/tra-cuu-don-hang"><i class="fa-solid fa-receipt"></i> Đơn Hàng Của Tôi</a>
+                            <a href="/Cart"><i class="fa-solid fa-basket-shopping"></i> Giỏ Hàng Hiện Tại</a>
+                            <div class="account-dropdown-divider"></div>
+                            <a href="javascript:void(0)" onclick="BloomAuth.logout()" style="color: #EF4444;"><i class="fa-solid fa-arrow-right-from-bracket" style="color: #EF4444;"></i> Đăng Xuất</a>
+                        </div>
+                    </div>
+                </div>
 
-                <a href="/Cart" class="btn-action-icon js-cart-toggle" title="Giỏ hoa của bạn">
+                <!-- Cart Button with Dynamic Badge -->
+                <a href="/Cart" class="btn-action-icon" title="Giỏ hoa của bạn">
                     <i class="fa-solid fa-basket-shopping"></i>
                     <span class="badge-count js-cart-count">@cartCount</span>
                 </a>
 
-                <a href="/Admin/Dashboard" class="btn btn-secondary btn-sm" style="margin-left: 8px;" title="Truy cập khu vực quản trị">
+                <!-- Admin Button -->
+                <a href="/Admin/Dashboard" class="btn btn-secondary btn-sm" style="margin-left: 4px;" title="Khu vực quản trị">
                     <i class="fa-solid fa-lock" style="font-size: 0.8rem;"></i> Admin
                 </a>
             </div>
         </div>
     </header>
+
+    <!-- Mobile Nav Drawer -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+    <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div class="brand-logo">
+                <i class="fa-solid fa-spa logo-icon"></i>
+                <div class="logo-text">Hữu Phước<span>Florist</span></div>
+            </div>
+            <button type="button" id="mobileNavClose" style="background: none; border: none; font-size: 1.4rem; color: var(--text-muted); cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 16px; font-size: 1.05rem; font-weight: 600;">
+            <li><a href="/" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-house" style="width: 24px; color: var(--primary);"></i> Trang Chủ</a></li>
+            <li><a href="/Product" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-flower" style="width: 24px; color: var(--primary);"></i> Bộ Sưu Tập Hoa</a></li>
+            <li><a href="/tu-thiet-ke-bo-hoa" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-wand-magic-sparkles" style="width: 24px; color: var(--primary);"></i> Tự Cắm Hoa Online</a></li>
+            <li><a href="/tra-cuu-don-hang" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-truck-fast" style="width: 24px; color: var(--primary);"></i> Tra Cứu Đơn Hàng</a></li>
+            <li><a href="/Cart" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-basket-shopping" style="width: 24px; color: var(--primary);"></i> Giỏ Hàng (<span class="js-cart-count">0</span>)</a></li>
+            <li><a href="/Home/About" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-circle-info" style="width: 24px; color: var(--primary);"></i> Về Chúng Tôi</a></li>
+        </ul>
+
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;">
+            <a href="/Account/Login" class="btn btn-outline" style="width: 100%;"><i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng Nhập</a>
+            <a href="/Account/Register" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-user-plus"></i> Đăng Ký Tài Khoản</a>
+        </div>
+    </div>
 
     <!-- 3. Page Body -->
     <main>
@@ -98,15 +156,15 @@
             <div class="footer-col">
                 <div class="brand-logo" style="margin-bottom: 20px;">
                     <i class="fa-solid fa-spa logo-icon" style="color: var(--primary);"></i>
-                    <div class="logo-text" style="color: #fff;">Bloom<span style="color: var(--primary);">Grace</span></div>
+                    <div class="logo-text" style="color: #fff;">Hữu Phước<span style="color: var(--primary);">Florist</span></div>
                 </div>
                 <p style="margin-bottom: 24px; line-height: 1.7;">
                     Boutique hoa tươi nghệ thuật & quà tặng sang trọng hàng đầu. Chúng tôi tỉ mỉ trong từng cánh hoa để chuyển tải trọn vẹn yêu thương và cảm xúc đến người nhận.
                 </p>
                 <div style="display: flex; gap: 14px;">
-                    <a href="#" class="btn-action-icon" style="background: #2b2325; border-color: #3d3235; color: #fff;"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="btn-action-icon" style="background: #2b2325; border-color: #3d3235; color: #fff;"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" class="btn-action-icon" style="background: #2b2325; border-color: #3d3235; color: #fff;"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="#" class="btn-action-icon" style="background: #1E293B; border-color: #334155; color: #fff;"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" class="btn-action-icon" style="background: #1E293B; border-color: #334155; color: #fff;"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="btn-action-icon" style="background: #1E293B; border-color: #334155; color: #fff;"><i class="fa-brands fa-tiktok"></i></a>
                 </div>
             </div>
 
@@ -128,7 +186,7 @@
                     <li><a href="/tu-thiet-ke-bo-hoa">Tự Thiết Kế Bó Hoa</a></li>
                     <li><a href="/Home/About">Chính Sách Cam Kết Hoa Tươi 100%</a></li>
                     <li><a href="/Home/Contact">Hướng Dẫn Giữ Hoa Tươi Lâu</a></li>
-                    <li><a href="/Home/Contact">Phương Thức Thanh Toán</a></li>
+                    <li><a href="/Account/Login">Tài Khoản Khách Hàng</a></li>
                 </ul>
             </div>
 
@@ -136,15 +194,15 @@
                 <h4>Showroom Trực Tiếp</h4>
                 <div class="footer-contact-item">
                     <i class="fa-solid fa-location-dot"></i>
-                    <div>128 Đường Hoa Hồng, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh</div>
+                    <div>601/8/17 CMT8 , Phường Hoà Hưng</div>
                 </div>
                 <div class="footer-contact-item">
                     <i class="fa-solid fa-phone"></i>
-                    <div>Hotline: 1900 6868 - 0909 123 456</div>
+                    <div>Hotline: 0377 415 147</div>
                 </div>
                 <div class="footer-contact-item">
                     <i class="fa-solid fa-envelope"></i>
-                    <div>contact@bloomgrace.vn</div>
+                    <div>contact@huuphuocflorist.vn</div>
                 </div>
                 
                 <h5 style="color: #fff; margin-top: 18px; margin-bottom: 10px; font-size: 0.9rem;">Thanh Toán An Toàn & Bảo Mật</h5>
@@ -153,18 +211,19 @@
                     <span style="background: #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #635bff;">STRIPE</span>
                     <span style="background: #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #005030;">VIETQR</span>
                     <span style="background: #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #1a1f71;">VISA</span>
-                    <span style="background: #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #eb001b;">MC</span>
                 </div>
             </div>
         </div>
 
         <div class="footer-bottom">
-            <div>© @DateTime.Now.Year Bloom & Grace Boutique. All rights reserved. ASP.NET MVC 5 + MySQL.</div>
+            <div>© @DateTime.Now.Year Hữu Phước Florist Boutique. All rights reserved. ASP.NET MVC 5 + Sky Blue Design System.</div>
             <div>Bảo mật thanh toán SSL 256-bit • Cam kết hoa tươi nguyên bản</div>
         </div>
     </footer>
 
     <!-- Client Scripts -->
+    <script src="~/Scripts/js/cart.js"></script>
+    <script src="~/Scripts/js/auth.js"></script>
     <script src="~/Scripts/js/main.js"></script>
     <script src="~/Scripts/js/chatbot.js"></script>
     @RenderSection("scripts", required: false)

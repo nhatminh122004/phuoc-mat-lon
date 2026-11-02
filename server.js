@@ -244,7 +244,7 @@ function renderLayout(title, content, activeNav = 'home') {
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title} - Bloom & Grace</title>
+    <title>${title} - Hữu Phước Florist</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -259,14 +259,19 @@ function renderLayout(title, content, activeNav = 'home') {
         <span>•</span>
         <span><i class="fa-solid fa-gift"></i> Tặng kèm thiệp hoa nghệ thuật & banner cao cấp mọi đơn hàng</span>
         <span>•</span>
-        <span><i class="fa-solid fa-phone"></i> Hotline 24/7: <strong>1900 6868</strong></span>
+        <span><i class="fa-solid fa-phone"></i> Hotline 24/7: <strong>0377 415 147</strong></span>
     </div>
 
     <header class="main-header">
         <div class="header-container">
+            <!-- Mobile Menu Toggle Button -->
+            <button type="button" class="btn-mobile-toggle" id="mobileNavToggle" title="Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
             <a href="/" class="brand-logo">
                 <i class="fa-solid fa-spa logo-icon"></i>
-                <div class="logo-text">Bloom<span>&Grace</span></div>
+                <div class="logo-text">Hữu Phước<span>Florist</span></div>
             </a>
             <div class="header-search">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
@@ -281,19 +286,71 @@ function renderLayout(title, content, activeNav = 'home') {
                 <li><a href="/Home/About" class="${activeNav === 'about' ? 'active' : ''}">Về Chúng Tôi</a></li>
             </ul>
             <div class="header-actions">
-                <a href="/tra-cuu-don-hang" class="btn-action-icon" title="Tra cứu tiến độ đơn hàng">
-                    <i class="fa-solid fa-truck-ramp-box"></i>
-                </a>
-                <a href="/Cart" class="btn-action-icon js-cart-toggle" title="Giỏ hoa của bạn">
+                <!-- User Account Dropdown -->
+                <div class="account-dropdown-wrapper">
+                    <button type="button" class="btn-action-icon" title="Tài khoản khách hàng">
+                        <i class="fa-regular fa-user"></i>
+                    </button>
+                    <div class="account-dropdown-menu">
+                        <!-- Guest State -->
+                        <div class="js-auth-guest">
+                            <a href="/Account/Login"><i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng Nhập</a>
+                            <a href="/Account/Register"><i class="fa-solid fa-user-plus"></i> Đăng Ký Tài Khoản</a>
+                            <div class="account-dropdown-divider"></div>
+                            <a href="/Account/ForgotPassword"><i class="fa-solid fa-key"></i> Quên Mật Khẩu?</a>
+                        </div>
+                        <!-- Logged-in State -->
+                        <div class="js-auth-logged" style="display: none;">
+                            <div class="account-user-info">
+                                <div class="account-user-name js-auth-username">Khách Hàng</div>
+                                <div class="account-user-email js-auth-useremail">user@domain.com</div>
+                            </div>
+                            <a href="/tra-cuu-don-hang"><i class="fa-solid fa-receipt"></i> Đơn Hàng Của Tôi</a>
+                            <a href="/Cart"><i class="fa-solid fa-basket-shopping"></i> Giỏ Hàng Hiện Tại</a>
+                            <div class="account-dropdown-divider"></div>
+                            <a href="javascript:void(0)" onclick="BloomAuth.logout()" style="color: #EF4444;"><i class="fa-solid fa-arrow-right-from-bracket" style="color: #EF4444;"></i> Đăng Xuất</a>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="/Cart" class="btn-action-icon" title="Giỏ hoa của bạn">
                     <i class="fa-solid fa-basket-shopping"></i>
                     <span class="badge-count js-cart-count">${totals.count}</span>
                 </a>
-                <a href="/Admin/Dashboard" class="btn btn-secondary btn-sm" style="margin-left: 8px;">
+                <a href="/Admin/Dashboard" class="btn btn-secondary btn-sm" style="margin-left: 4px;" title="Khu vực quản trị">
                     <i class="fa-solid fa-lock" style="font-size: 0.8rem;"></i> Admin
                 </a>
             </div>
         </div>
     </header>
+
+    <!-- Mobile Nav Drawer -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+    <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div class="brand-logo">
+                <i class="fa-solid fa-spa logo-icon"></i>
+                <div class="logo-text">Hữu Phước<span>Florist</span></div>
+            </div>
+            <button type="button" id="mobileNavClose" style="background: none; border: none; font-size: 1.4rem; color: var(--text-muted); cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 16px; font-size: 1.05rem; font-weight: 600;">
+            <li><a href="/" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-house" style="width: 24px; color: var(--primary);"></i> Trang Chủ</a></li>
+            <li><a href="/Product" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-flower" style="width: 24px; color: var(--primary);"></i> Bộ Sưu Tập Hoa</a></li>
+            <li><a href="/tu-thiet-ke-bo-hoa" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-wand-magic-sparkles" style="width: 24px; color: var(--primary);"></i> Tự Cắm Hoa Online</a></li>
+            <li><a href="/tra-cuu-don-hang" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-truck-fast" style="width: 24px; color: var(--primary);"></i> Tra Cứu Đơn Hàng</a></li>
+            <li><a href="/Cart" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-basket-shopping" style="width: 24px; color: var(--primary);"></i> Giỏ Hàng (<span class="js-cart-count">${totals.count}</span>)</a></li>
+            <li><a href="/Home/About" style="display: block; padding: 8px 0; color: var(--text);"><i class="fa-solid fa-circle-info" style="width: 24px; color: var(--primary);"></i> Về Chúng Tôi</a></li>
+        </ul>
+
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;">
+            <a href="/Account/Login" class="btn btn-outline" style="width: 100%;"><i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng Nhập</a>
+            <a href="/Account/Register" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-user-plus"></i> Đăng Ký Tài Khoản</a>
+        </div>
+    </div>
 
     <main>
         ${content}
@@ -385,7 +442,7 @@ function renderLayout(title, content, activeNav = 'home') {
             <div class="footer-col">
                 <div class="brand-logo" style="margin-bottom: 20px;">
                     <i class="fa-solid fa-spa logo-icon" style="color: var(--primary);"></i>
-                    <div class="logo-text" style="color: #fff;">Bloom<span style="color: var(--primary);">Grace</span></div>
+                    <div class="logo-text" style="color: #fff;">Hữu Phước<span style="color: var(--primary);">Florist</span></div>
                 </div>
                 <p style="margin-bottom: 20px; line-height: 1.7;">Boutique hoa tươi nghệ thuật & quà tặng sang trọng hàng đầu. Chuyển tải trọn vẹn yêu thương đến người nhận.</p>
                 <div style="display: flex; gap: 10px;">
@@ -407,20 +464,23 @@ function renderLayout(title, content, activeNav = 'home') {
                 <ul>
                     <li><a href="/tra-cuu-don-hang">Tra Cứu Vận Đơn</a></li>
                     <li><a href="/tu-thiet-ke-bo-hoa">Tự Thiết Kế Bó Hoa</a></li>
+                    <li><a href="/Account/Login">Tài Khoản Khách Hàng</a></li>
                     <li><a href="/Home/About">Chính Sách Hoa Tươi 100%</a></li>
                 </ul>
             </div>
             <div class="footer-col">
                 <h4>Showroom Trực Tiếp</h4>
-                <div class="footer-contact-item"><i class="fa-solid fa-location-dot"></i> 128 Đường Hoa Hồng, Quận 1, TP.HCM</div>
-                <div class="footer-contact-item"><i class="fa-solid fa-phone"></i> 1900 6868 - 0909 123 456</div>
+                <div class="footer-contact-item"><i class="fa-solid fa-location-dot"></i> 601/8/17 CMT8 , Phường Hoà Hưng</div>
+                <div class="footer-contact-item"><i class="fa-solid fa-phone"></i> 0377 415 147</div>
             </div>
         </div>
         <div class="footer-bottom">
-            <div>© ${new Date().getFullYear()} Bloom & Grace Boutique. ASP.NET MVC 5 + MySQL + VNPay + Stripe + AI Chatbot.</div>
+            <div>© ${new Date().getFullYear()} Hữu Phước Florist Boutique. All rights reserved. ASP.NET MVC 5 + Sky Blue Design System.</div>
         </div>
     </footer>
 
+    <script src="/Scripts/js/cart.js"></script>
+    <script src="/Scripts/js/auth.js"></script>
     <script src="/Scripts/js/main.js"></script>
     <script src="/Scripts/js/chatbot.js"></script>
 </body>
@@ -893,51 +953,17 @@ const server = http.createServer((req, res) => {
 
     // CART
     if (pathname === '/Cart') {
-        const totals = getCartTotals();
         const html = `
-            <div class="section" style="padding-top: 40px;">
-                <h1 class="font-serif" style="font-size: 2.2rem; margin-bottom: 24px;">Giỏ Hoa Của Bạn</h1>
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px; align-items: start;">
-                    <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 24px;">
-                        ${cart.items.length === 0 ? '<p>Giỏ hàng đang trống.</p>' : `
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead>
-                                    <tr style="border-bottom: 1px solid var(--border); text-align: left;">
-                                        <th style="padding-bottom: 12px;">Sản Phẩm</th>
-                                        <th style="padding-bottom: 12px; text-align: center;">Số Lượng</th>
-                                        <th style="padding-bottom: 12px; text-align: right;">Thành Tiền</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${cart.items.map(i => `
-                                        <tr style="border-bottom: 1px solid #f6eff0;">
-                                            <td style="padding: 16px 0; display: flex; gap: 14px; align-items: center;">
-                                                <img src="${i.image}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;" />
-                                                <strong>${i.name}</strong>
-                                            </td>
-                                            <td style="text-align: center;">x ${i.qty}</td>
-                                            <td style="text-align: right; font-weight: 700;">${formatMoney(i.price * i.qty)}</td>
-                                            <td style="text-align: right;">
-                                                <form action="/Cart/RemoveItem" method="post" style="margin: 0;">
-                                                    <input type="hidden" name="productId" value="${i.productId}" />
-                                                    <button type="submit" style="background: none; border: none; cursor: pointer; color: #b5a9ab;"><i class="fa-regular fa-trash-can"></i></button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        `}
-                    </div>
-                    <div style="background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 24px;">
-                        <h3 class="font-serif" style="font-size: 1.25rem; margin-bottom: 16px;">Tạm Tính</h3>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span>Tiền hoa:</span><strong>${formatMoney(totals.subTotal)}</strong></div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span>Phí giao hoa:</span><span>${totals.shippingFee === 0 ? 'Miễn phí' : formatMoney(totals.shippingFee)}</span></div>
-                        <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 700; color: var(--primary); border-top: 1px solid var(--border); padding-top: 14px; margin-bottom: 24px;">
-                            <span>Tổng tiền:</span><span>${formatMoney(totals.total)}</span>
-                        </div>
-                        <a href="/Checkout" class="btn btn-primary" style="width: 100%; padding: 14px;">Tiến Hành Đặt Hoa <i class="fa-solid fa-arrow-right-long"></i></a>
+            <div class="section" style="padding-top: 40px; padding-bottom: 80px;">
+                <div class="cart-page-header">
+                    <span class="section-tag">Mua Sắm Trực Tuyến</span>
+                    <h1 class="font-serif" style="font-size: 2.3rem; margin-bottom: 8px;">Giỏ Hoa Của Bạn</h1>
+                    <p style="color: var(--text-muted); font-size: 0.98rem;">Xem lại danh sách hoa tươi nghệ thuật đã chọn trước khi tiến hành thanh toán & chọn giờ giao.</p>
+                </div>
+                <div id="cartPageContainer">
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <span class="spinner-btn" style="border-top-color: var(--primary); width: 32px; height: 32px;"></span>
+                        <div style="margin-top: 12px; color: var(--text-muted);">Đang nạp dữ liệu giỏ hoa...</div>
                     </div>
                 </div>
             </div>
@@ -1185,13 +1211,13 @@ const server = http.createServer((req, res) => {
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <title>Admin Dashboard - Bloom & Grace</title>
+    <title>Admin Dashboard - Hữu Phước Florist</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="/Content/css/admin.css" />
 </head>
 <body class="admin-body">
     <aside class="admin-sidebar">
-        <div class="admin-brand"><i class="fa-solid fa-spa"></i><h2>Bloom & Grace</h2></div>
+        <div class="admin-brand"><i class="fa-solid fa-spa"></i><h2>Hữu Phước Florist</h2></div>
         <ul class="admin-menu">
             <li><a href="/Admin/Dashboard" class="active"><i class="fa-solid fa-chart-pie"></i> Tổng Quan</a></li>
             <li><a href="/Admin/Order"><i class="fa-solid fa-boxes-packing"></i> Quản Lý Đơn</a></li>
@@ -1255,17 +1281,201 @@ const server = http.createServer((req, res) => {
             <div class="section" style="padding-top: 50px; max-width: 900px;">
                 <div class="section-header">
                     <span class="section-tag">Câu Chuyện Thương Hiệu</span>
-                    <h1 class="section-title">Bloom & Grace Floral Boutique</h1>
+                    <h1 class="section-title">Hữu Phước Florist Boutique</h1>
                 </div>
                 <div style="background: #fff; border-radius: 20px; border: 1px solid var(--border); padding: 36px; line-height: 1.8;">
                     <img src="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=1000&q=80" style="width: 100%; height: 350px; object-fit: cover; border-radius: 12px; margin-bottom: 24px;" />
                     <h3 class="font-serif" style="font-size: 1.5rem; margin-bottom: 12px;">Cam Kết Hoa Tươi 100% Tuyển Chọn</h3>
-                    <p>Tại Bloom & Grace, từng cành hoa đều được chăm chút kỹ lưỡng và cắm bởi nghệ nhân hoa hàng đầu. Chúng tôi luôn chụp ảnh gửi khách hàng duyệt trước khi giao hàng để đảm bảo trải nghiệm trọn vẹn nhất.</p>
+                    <p>Tại Hữu Phước Florist, từng cành hoa đều được chăm chút kỹ lưỡng và cắm bởi nghệ nhân hoa hàng đầu. Chúng tôi luôn chụp ảnh gửi khách hàng duyệt trước khi giao hàng để đảm bảo trải nghiệm trọn vẹn nhất.</p>
                 </div>
             </div>
         `;
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(renderLayout("Về Chúng Tôi", html, 'about'));
+        return;
+    }
+
+    // LOGIN
+    if (pathname === '/Account/Login' || pathname === '/login') {
+        const html = `
+            <section class="auth-page-section">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <a href="/" class="auth-logo">
+                            <i class="fa-solid fa-spa"></i>
+                            <span>Hữu Phước<strong>Florist</strong></span>
+                        </a>
+                        <h1 class="auth-title font-serif">Chào mừng trở lại</h1>
+                        <p class="auth-subtitle">Đăng nhập để theo dõi tiến độ bó hoa, quản lý ưu đãi và đặt hoa hỏa tốc dễ dàng hơn.</p>
+                    </div>
+
+                    <div id="loginAlert" class="auth-alert"></div>
+
+                    <form id="loginForm" onsubmit="BloomAuth.handleLogin(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="loginEmail">Địa chỉ Email</label>
+                            <div class="input-with-icon">
+                                <input type="email" id="loginEmail" class="form-control" placeholder="nhapemail@domain.com" autocomplete="email" />
+                                <i class="fa-regular fa-envelope input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="loginPassword">Mật khẩu</label>
+                            <div class="input-with-icon">
+                                <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" autocomplete="current-password" />
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <button type="button" class="password-toggle-btn" onclick="BloomAuth.togglePassword('loginPassword', this)" title="Hiện/ẩn mật khẩu">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="rememberMe" checked />
+                                <span>Ghi nhớ đăng nhập</span>
+                            </label>
+                            <a href="/Account/ForgotPassword" class="auth-link">Quên mật khẩu?</a>
+                        </div>
+
+                        <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-auth">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng Nhập
+                        </button>
+                    </form>
+
+                    <div class="auth-footer">
+                        <span>Chưa có tài khoản?</span>
+                        <a href="/Account/Register" class="auth-link" style="margin-left: 6px;">Đăng ký ngay</a>
+                    </div>
+                </div>
+            </section>
+        `;
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(renderLayout("Đăng Nhập", html, 'login'));
+        return;
+    }
+
+    // REGISTER
+    if (pathname === '/Account/Register' || pathname === '/register') {
+        const html = `
+            <section class="auth-page-section">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <a href="/" class="auth-logo">
+                            <i class="fa-solid fa-spa"></i>
+                            <span>Hữu Phước<strong>Florist</strong></span>
+                        </a>
+                        <h1 class="auth-title font-serif">Tạo tài khoản mới</h1>
+                        <p class="auth-subtitle">Gia nhập cộng đồng yêu hoa để nhận ngay mã giảm giá 10% và trải nghiệm các dịch vụ hoa tươi cao cấp.</p>
+                    </div>
+
+                    <div id="registerAlert" class="auth-alert"></div>
+
+                    <form id="registerForm" onsubmit="BloomAuth.handleRegister(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="regFullName">Họ và tên</label>
+                            <div class="input-with-icon">
+                                <input type="text" id="regFullName" class="form-control" placeholder="Nguyễn Văn A" autocomplete="name" />
+                                <i class="fa-regular fa-user input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="regEmail">Địa chỉ Email</label>
+                            <div class="input-with-icon">
+                                <input type="email" id="regEmail" class="form-control" placeholder="nhapemail@domain.com" autocomplete="email" />
+                                <i class="fa-regular fa-envelope input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="regPassword">Mật khẩu</label>
+                            <div class="input-with-icon">
+                                <input type="password" id="regPassword" class="form-control" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password" />
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <button type="button" class="password-toggle-btn" onclick="BloomAuth.togglePassword('regPassword', this)" title="Hiện/ẩn mật khẩu">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="regConfirmPassword">Xác nhận mật khẩu</label>
+                            <div class="input-with-icon">
+                                <input type="password" id="regConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" autocomplete="new-password" />
+                                <i class="fa-solid fa-shield-halved input-icon"></i>
+                                <button type="button" class="password-toggle-btn" onclick="BloomAuth.togglePassword('regConfirmPassword', this)" title="Hiện/ẩn mật khẩu">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-options" style="margin-bottom: 22px;">
+                            <label class="checkbox-label" style="align-items: flex-start; line-height: 1.4;">
+                                <input type="checkbox" id="regAgreeTerms" checked style="margin-top: 2px;" />
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">
+                                    Tôi đồng ý với <a href="/Home/About" class="auth-link">Điều khoản dịch vụ</a> và <a href="/Home/About" class="auth-link">Chính sách bảo mật</a> của Hữu Phước Florist.
+                                </span>
+                            </label>
+                        </div>
+
+                        <button type="submit" id="registerSubmitBtn" class="btn btn-primary btn-auth">
+                            <i class="fa-solid fa-user-plus"></i> Tạo Tài Khoản
+                        </button>
+                    </form>
+
+                    <div class="auth-footer">
+                        <span>Đã có tài khoản?</span>
+                        <a href="/Account/Login" class="auth-link" style="margin-left: 6px;">Đăng nhập ngay</a>
+                    </div>
+                </div>
+            </section>
+        `;
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(renderLayout("Đăng Ký", html, 'register'));
+        return;
+    }
+
+    // FORGOT PASSWORD
+    if (pathname === '/Account/ForgotPassword' || pathname === '/forgot-password') {
+        const html = `
+            <section class="auth-page-section">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <div style="width: 68px; height: 68px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 18px;">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <h1 class="auth-title font-serif">Quên mật khẩu?</h1>
+                        <p class="auth-subtitle">Nhập địa chỉ email liên kết với tài khoản của bạn. Hữu Phước Florist sẽ gửi liên kết khôi phục mật khẩu trong giây lát.</p>
+                    </div>
+
+                    <div id="forgotAlert" class="auth-alert"></div>
+
+                    <form id="forgotForm" onsubmit="BloomAuth.handleForgotPassword(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="forgotEmail">Địa chỉ Email đã đăng ký</label>
+                            <div class="input-with-icon">
+                                <input type="email" id="forgotEmail" class="form-control" placeholder="nhapemail@domain.com" autocomplete="email" />
+                                <i class="fa-regular fa-envelope input-icon"></i>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="forgotSubmitBtn" class="btn btn-primary btn-auth" style="margin-top: 10px;">
+                            <i class="fa-solid fa-paper-plane"></i> Gửi Liên Kết Đặt Lại Mật Khẩu
+                        </button>
+                    </form>
+
+                    <div class="auth-footer">
+                        <a href="/Account/Login" class="auth-link">
+                            <i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Quay lại Đăng nhập
+                        </a>
+                    </div>
+                </div>
+            </section>
+        `;
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(renderLayout("Quên Mật Khẩu", html));
         return;
     }
 
@@ -1275,5 +1485,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🌸 Bloom & Grace Floral Boutique running on http://localhost:${PORT}`);
+    console.log(`🌸 Hữu Phước Florist Boutique running on http://localhost:${PORT}`);
 });
