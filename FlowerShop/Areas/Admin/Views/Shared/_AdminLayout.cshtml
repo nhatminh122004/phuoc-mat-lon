@@ -1,4 +1,21 @@
-<!DOCTYPE html>
+﻿@{
+    // Precompute trạng thái menu: Razor không parse được ?. + ["key"] trong @(...) của attribute
+    string adminCurrentController = ViewContext.RouteData.Values["controller"] as string ?? string.Empty;
+    string navDashboard = adminCurrentController == "Dashboard" ? "active" : "";
+    string navOrder = adminCurrentController == "Order" ? "active" : "";
+    string navProduct = adminCurrentController == "Product" ? "active" : "";
+    string navVoucher = adminCurrentController == "Voucher" ? "active" : "";
+    string navReview = adminCurrentController == "Review" ? "active" : "";
+    string navSettings = adminCurrentController == "Settings" ? "active" : "";
+}
+@{
+    Func<string, string> AssetUrl = vp =>
+    {
+        string physical = Server.MapPath(vp);
+        long ticks = System.IO.File.Exists(physical) ? System.IO.File.GetLastWriteTimeUtc(physical).Ticks : 0;
+        return Url.Content(vp) + "?v=" + ticks;
+    };
+}<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -12,7 +29,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <!-- Admin Stylesheet -->
-    <link rel="stylesheet" href="~/Content/css/admin.css" />
+    <link rel="stylesheet" href="@AssetUrl("~/Content/css/admin.css")" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="admin-body">
@@ -25,33 +42,43 @@
 
         <ul class="admin-menu">
             <li>
-                <a href="/Admin/Dashboard" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                <a href="/Admin/Dashboard" class="@navDashboard">
                     <i class="fa-solid fa-chart-pie"></i> Tổng Quan (Dashboard)
                 </a>
             </li>
             <li>
-                <a href="/Admin/Order" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Order" ? "active" : "")">
+                <a href="/Admin/Order" class="@navOrder">
                     <i class="fa-solid fa-boxes-packing"></i> Quản Lý Đơn & Điều Phối
                 </a>
             </li>
             <li>
-                <a href="/Admin/Product" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">
+                <a href="/Admin/Product" class="@navProduct">
                     <i class="fa-solid fa-fan"></i> Danh Mục & Mẫu Hoa
                 </a>
             </li>
             <li>
-                <a href="/Admin/Voucher" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Voucher" ? "active" : "")">
+                <a href="/Admin/Voucher" class="@navVoucher">
                     <i class="fa-solid fa-ticket"></i> Mã Giảm Giá & Flash Sale
                 </a>
             </li>
             <li>
-                <a href="/Admin/Settings" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Settings" ? "active" : "")">
-                    <i class="fa-solid fa-sliders"></i> Cấu Hình VNPay / Stripe / AI
+                <a href="/Admin/Review" class="@navReview">
+                    <i class="fa-solid fa-star"></i> Duyệt Đánh Giá
+                </a>
+            </li>
+            <li>
+                <a href="/Admin/Settings" class="@navSettings">
+                    <i class="fa-solid fa-sliders"></i> Cấu Hình SePay / Email
                 </a>
             </li>
             <li style="margin-top: auto;">
                 <a href="/" target="_blank" style="color: #ffd4dc;">
                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem Cửa Hàng (Store)
+                </a>
+            </li>
+            <li>
+                <a href="/Account/Logout" style="color: #fca5a5;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng Xuất
                 </a>
             </li>
         </ul>
@@ -70,7 +97,7 @@
                 </span>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;" />
-                    <span style="font-weight: 600; font-size: 0.9rem;">Quản Lý Cửa Hàng</span>
+                    <span style="font-weight: 600; font-size: 0.9rem;">@(Session["FullName"] as string ?? "Quản Lý Cửa Hàng")</span>
                 </div>
             </div>
         </header>

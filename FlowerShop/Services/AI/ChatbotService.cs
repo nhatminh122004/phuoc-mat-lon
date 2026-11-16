@@ -1,24 +1,24 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
 using FlowerShop.DAL;
-using FlowerShop.Models.Entities;
 using FlowerShop.Models.ViewModels;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using FlowerShop.Services.Orders;
+using System.Text.RegularExpressions;
 
 namespace FlowerShop.Services.AI
 {
+    /// <summary>
+    /// Chatbot tư vấn hoa. Hiện là rule-based (không gọi LLM) nhưng đã tách
+    /// <see cref="ChatbotIntentDetector"/> để unit test và để thay bằng Gemini sau này
+    /// mà không đổi hợp đồng dữ liệu trả về cho FE.
+    /// </summary>
     public class ChatbotService
     {
         public static ChatResponseViewModel ProcessMessage(string userMessage, string sessionId)
         {
             var response = new ChatResponseViewModel();
+
             if (string.IsNullOrWhiteSpace(userMessage))
             {
                 response.Reply = "Dạ chào bạn! Em là Florist AI của tiệm hoa. Em có thể giúp bạn chọn mẫu hoa ưng ý, viết lời chúc thiệp ý nghĩa, hoặc tra cứu đơn hàng giúp bạn ạ! 🌸";
@@ -26,156 +26,197 @@ namespace FlowerShop.Services.AI
             }
 
             string cleanMsg = userMessage.Trim();
-            string lowerMsg = cleanMsg.ToLowerInvariant();
+            ChatIntent intent = ChatbotIntentDetector.Detect(cleanMsg);
 
             using (var db = new FlowerShopDbContext())
             {
-                // 1. Kiểm tra nếu hỏi tra cứu đơn hàng (chứa mã đơn FL... hoặc từ 'tra cứu', 'kiểm tra đơn', 'đơn hàng')
-                var orderCodeMatch = Regex.Match(cleanMsg, @"(FL[\d\-]+|[0-9]{8,15})", RegexOptions.IgnoreCase);
-                if (orderCodeMatch.Success || lowerMsg.Contains("đơn hàng") || lowerMsg.Contains("tra cứu"))
+                if (intent == ChatIntent.TrackOrder)
                 {
-                    string searchKey = orderCodeMatch.Success ? orderCodeMatch.Value : cleanMsg;
-                    var foundOrder = db.Orders
-                        .Include("OrderDetails")
-                        .FirstOrDefault(o => o.OrderCode.Equals(searchKey, StringComparison.OrdinalIgnoreCase) 
-                                          || o.SenderPhone == searchKey 
-                                          || o.RecipientPhone == searchKey);
-
-                    if (foundOrder != null)
+                    var tracking = TryTrackOrder(db, cleanMsg, intent);
+                    if (tracking != null)
                     {
-                        string statusText = GetVietnameseOrderStatus(foundOrder.OrderStatus);
-                        response.Reply = $"Dạ em đã tìm thấy đơn hàng **{foundOrder.OrderCode}** của bạn!\n" +
-                                         $"📍 **Người nhận:** {foundOrder.RecipientName} - {foundOrder.RecipientAddress}\n" +
-                                         $"⏰ **Thời gian giao:** {foundOrder.DeliveryDate:dd/MM/yyyy} ({foundOrder.DeliveryTimeSlot})\n" +
-                                         $"🌸 **Trạng thái:** {statusText}\n" +
-                                         $"💰 **Tổng tiền:** {foundOrder.TotalAmount:N0} đ ({foundOrder.PaymentStatus})\n" +
-                                         (string.IsNullOrEmpty(foundOrder.ProofPhotoUrl) ? "" : "📸 Bạn có thể bấm vào thẻ bên dưới để xem ảnh hoa thực tế nghệ nhân đã cắm nhé!");
-
-                        response.OrderSummary = new OrderStatusSummary
-                        {
-                            OrderCode = foundOrder.OrderCode,
-                            Status = foundOrder.OrderStatus,
-                            StatusName = statusText,
-                            DeliveryTime = $"{foundOrder.DeliveryDate:dd/MM/yyyy} ({foundOrder.DeliveryTimeSlot})",
-                            ProofPhotoUrl = foundOrder.ProofPhotoUrl
-                        };
-                        return response;
-                    }
-                    else if (orderCodeMatch.Success)
-                    {
-                        response.Reply = $"Dạ em chưa tìm thấy đơn hàng mã **{orderCodeMatch.Value}** trong hệ thống. Bạn vui lòng kiểm tra lại mã đơn hoặc gửi số điện thoại đặt hàng để em tra cứu giúp nhé!";
-                        return response;
+                        return tracking;
                     }
                 }
 
-                // 2. Kiểm tra nếu nhờ viết lời chúc / thiệp
-                if (lowerMsg.Contains("lời chúc") || lowerMsg.Contains("viết thiệp") || lowerMsg.Contains("câu chúc") || lowerMsg.Contains("thơ"))
+                if (intent == ChatIntent.WriteCard)
                 {
-                    response.Reply = GenerateCardMessage(lowerMsg);
+                    response.Reply = GenerateCardMessage(cleanMsg.ToLowerInvariant());
                     return response;
                 }
 
-                // 3. Tư vấn chọn hoa theo ngân sách & dịp tặng
-                var (suggestedText, products) = RecommendFlowers(db, lowerMsg);
-                response.Reply = suggestedText;
-                response.SuggestedProducts = products;
+                response.Reply = RecommendFlowers(db, intent);
+                response.SuggestedProducts = SuggestProducts(db, intent);
             }
 
             return response;
         }
 
-        private static (string, List<ProductSuggestion>) RecommendFlowers(FlowerShopDbContext db, string query)
+        private static ChatResponseViewModel TryTrackOrder(FlowerShopDbContext db, string message, ChatIntent intent)
         {
-            var productsQuery = db.Products.Where(p => p.IsActive);
-            string reply = "";
+            string orderCode = ChatbotIntentDetector.ExtractOrderCode(message);
+            string phone = ChatbotIntentDetector.NormalizePhone(message);
 
-            if (query.Contains("sinh nhật"))
+            if (string.IsNullOrEmpty(orderCode) && string.IsNullOrEmpty(phone))
             {
-                reply = "Dạ, với hoa sinh nhật, em gợi ý cho bạn những mẫu hoa rạng rỡ mang ý nghĩa tuổi mới may mắn và hạnh phúc nhất:";
-                productsQuery = productsQuery.Where(p => p.Occasion.Slug.Contains("sinh-nhat") || p.IsBestSeller);
-            }
-            else if (query.Contains("người yêu") || query.Contains("bạn gái") || query.Contains("tình yêu") || query.Contains("valentine") || query.Contains("vợ"))
-            {
-                reply = "Dạ tặng người yêu hay vợ thì hoa Hồng Ecuador đỏ nhung hoặc Tulip hồng là tuyệt vời nhất, thể hiện tình yêu nồng cháy và sự trân trọng:";
-                productsQuery = productsQuery.Where(p => p.ColorTone == "Đỏ" || p.ColorTone == "Hồng" || p.Occasion.Slug.Contains("tinh-yeu"));
-            }
-            else if (query.Contains("mẹ") || query.Contains("tri ân") || query.Contains("cô"))
-            {
-                reply = "Dạ tặng Mẹ hoặc Cô giáo, tiệm có những giỏ hoa tone Pastel ấm áp, Cẩm Tú Cầu và Lan Hồ Điệp biểu trưng cho lòng biết ơn sâu sắc:";
-                productsQuery = productsQuery.Where(p => p.Occasion.Slug.Contains("tri-an") || p.Category.Slug.Contains("gio"));
-            }
-            else if (query.Contains("khai trương") || query.Contains("chúc mừng") || query.Contains("đối tác") || query.Contains("sếp"))
-            {
-                reply = "Dạ mừng khai trương hồng phát và chúc mừng đối tác, hoa Hướng Dương và Kệ hoa đại tài lộc tone Vàng Kim là lựa chọn hàng đầu ạ:";
-                productsQuery = productsQuery.Where(p => p.ColorTone == "Vàng" || p.Occasion.Slug.Contains("khai-truong"));
-            }
-            else if (query.Contains("dưới 500") || query.Contains("500k") || query.Contains("rẻ"))
-            {
-                reply = "Dạ với tầm giá tiết kiệm dưới 600k, shop có những mẫu hoa bó mini và hoa baby xinh xắn cực kỳ được yêu thích:";
-                productsQuery = productsQuery.Where(p => (p.SalePrice ?? p.Price) <= 650000);
-            }
-            else
-            {
-                reply = "Dạ chào bạn! Tiệm hoa gửi bạn tham khảo các mẫu hoa tươi nghệ thuật bán chạy và được yêu thích nhất hôm nay ạ:";
-                productsQuery = productsQuery.Where(p => p.IsBestSeller || p.IsFeatured);
+                return null;
             }
 
-            var list = productsQuery.Take(3).Select(p => new ProductSuggestion
-            {
-                Id = p.Id,
-                Name = p.Name,
-                ImageUrl = p.MainImageUrl,
-                Price = p.SalePrice ?? p.Price,
-                Slug = p.Slug
-            }).ToList();
+            var foundOrder = db.Orders.AsNoTracking()
+                .Where(o => (orderCode != "" && o.OrderCode == orderCode)
+                         || (phone != "" && (o.SenderPhone == phone || o.RecipientPhone == phone)))
+                .OrderByDescending(o => o.CreatedAt)
+                .Select(o => new
+                {
+                    o.OrderCode,
+                    o.RecipientName,
+                    o.RecipientAddress,
+                    o.DeliveryDate,
+                    o.DeliveryTimeSlot,
+                    o.OrderStatus,
+                    o.PaymentStatus,
+                    o.TotalAmount,
+                    o.ProofPhotoUrl
+                })
+                .FirstOrDefault();
 
-            if (!list.Any())
+            if (foundOrder == null)
             {
-                list = db.Products.Where(p => p.IsActive).OrderBy(p => p.Id).Take(3).Select(p => new ProductSuggestion
+                return new ChatResponseViewModel
+                {
+                    Reply = string.IsNullOrEmpty(orderCode)
+                        ? "Dạ em chưa tìm thấy đơn hàng nào gắn với số điện thoại này. Bạn kiểm tra lại giúp em nhé!"
+                        : string.Format("Dạ em chưa tìm thấy đơn hàng mã **{0}**. Bạn vui lòng kiểm tra lại mã đơn hoặc gửi số điện thoại đặt hàng để em tra cứu giúp nhé!", orderCode)
+                };
+            }
+
+            string statusName = OrderNotificationService.GetStatusDisplayName(foundOrder.OrderStatus);
+
+            var response = new ChatResponseViewModel
+            {
+                Reply = string.Format(
+                    "Dạ em đã tìm thấy đơn hàng **{0}** của bạn!\n📍 **Người nhận:** {1} - {2}\n⏰ **Thời gian giao:** {3:dd/MM/yyyy} ({4})\n🌸 **Trạng thái:** {5}\n💰 **Tổng tiền:** {6:N0} đ ({7}){8}",
+                    foundOrder.OrderCode,
+                    foundOrder.RecipientName,
+                    foundOrder.RecipientAddress,
+                    foundOrder.DeliveryDate,
+                    foundOrder.DeliveryTimeSlot,
+                    statusName,
+                    foundOrder.TotalAmount,
+                    foundOrder.PaymentStatus,
+                    string.IsNullOrEmpty(foundOrder.ProofPhotoUrl)
+                        ? string.Empty
+                        : "\n📸 Bạn có thể bấm vào thẻ bên dưới để xem ảnh hoa thực tế nghệ nhân đã cắm nhé!"),
+                OrderSummary = new OrderStatusSummary
+                {
+                    OrderCode = foundOrder.OrderCode,
+                    Status = foundOrder.OrderStatus,
+                    StatusName = statusName,
+                    DeliveryTime = string.Format("{0:dd/MM/yyyy} ({1})", foundOrder.DeliveryDate, foundOrder.DeliveryTimeSlot),
+                    ProofPhotoUrl = foundOrder.ProofPhotoUrl
+                }
+            };
+
+            return response;
+        }
+
+        private static string RecommendFlowers(FlowerShopDbContext db, ChatIntent intent)
+        {
+            switch (intent)
+            {
+                case ChatIntent.RecommendBirthday:
+                    return "Dạ, với hoa sinh nhật, em gợi ý cho bạn những mẫu hoa rạng rỡ mang ý nghĩa tuổi mới may mắn và hạnh phúc nhất:";
+                case ChatIntent.RecommendLove:
+                    return "Dạ tặng người yêu hay vợ thì hoa Hồng Ecuador đỏ nhung hoặc Tulip hồng là tuyệt vời nhất, thể hiện tình yêu nồng cháy và sự trân trọng:";
+                case ChatIntent.RecommendMother:
+                    return "Dạ tặng Mẹ hoặc Cô giáo, tiệm có những giỏ hoa tone Pastel ấm áp, Cẩm Tú Cầu và Lan Hồ Điệp biểu trưng cho lòng biết ơn sâu sắc:";
+                case ChatIntent.RecommendGrandOpening:
+                    return "Dạ mừng khai trương hồng phát và chúc mừng đối tác, hoa Hướng Dương và Kệ hoa đại tài lộc tone Vàng Kim là lựa chọn hàng đầu ạ:";
+                case ChatIntent.RecommendBudget:
+                    return "Dạ với tầm giá tiết kiệm, shop có những mẫu hoa bó mini và hoa baby xinh xắn cực kỳ được yêu thích:";
+                default:
+                    return "Dạ chào bạn! Tiệm hoa gửi bạn tham khảo các mẫu hoa tươi nghệ thuật bán chạy và được yêu thích nhất hôm nay ạ:";
+            }
+        }
+
+        private static List<ProductSuggestion> SuggestProducts(FlowerShopDbContext db, ChatIntent intent)
+        {
+            var query = db.Products.AsNoTracking().Where(p => p.IsActive);
+
+            switch (intent)
+            {
+                case ChatIntent.RecommendBirthday:
+                    query = query.Where(p => p.Occasion.Slug.Contains("sinh-nhat") || p.IsBestSeller);
+                    break;
+                case ChatIntent.RecommendLove:
+                    query = query.Where(p => p.ColorTone == "Đỏ" || p.ColorTone == "Hồng" || p.Occasion.Slug.Contains("tinh-yeu"));
+                    break;
+                case ChatIntent.RecommendMother:
+                    query = query.Where(p => p.Occasion.Slug.Contains("tri-an") || p.Category.Slug.Contains("gio"));
+                    break;
+                case ChatIntent.RecommendGrandOpening:
+                    query = query.Where(p => p.ColorTone == "Vàng" || p.Occasion.Slug.Contains("khai-truong"));
+                    break;
+                case ChatIntent.RecommendBudget:
+                    query = query.Where(p => (p.SalePrice ?? p.Price) <= 650000m);
+                    break;
+                default:
+                    query = query.Where(p => p.IsBestSeller || p.IsFeatured);
+                    break;
+            }
+
+            var list = query
+                .OrderByDescending(p => p.RatingAvg)
+                .Take(3)
+                .Select(p => new ProductSuggestion
                 {
                     Id = p.Id,
                     Name = p.Name,
                     ImageUrl = p.MainImageUrl,
                     Price = p.SalePrice ?? p.Price,
                     Slug = p.Slug
-                }).ToList();
+                })
+                .ToList();
+
+            if (!list.Any())
+            {
+                list = db.Products.AsNoTracking()
+                    .Where(p => p.IsActive)
+                    .OrderByDescending(p => p.RatingAvg)
+                    .Take(3)
+                    .Select(p => new ProductSuggestion
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        ImageUrl = p.MainImageUrl,
+                        Price = p.SalePrice ?? p.Price,
+                        Slug = p.Slug
+                    })
+                    .ToList();
             }
 
-            return (reply, list);
+            return list;
         }
 
-        private static string GenerateCardMessage(string query)
+        private static string GenerateCardMessage(string lowerMessage)
         {
-            if (query.Contains("mẹ"))
+            if (lowerMessage.Contains("mẹ"))
             {
                 return "💌 **Gợi ý lời chúc tặng Mẹ yêu:**\n\n" +
                        "1. *'Cảm ơn Mẹ vì đã luôn là bến đỗ bình yên nhất của con. Chúc Mẹ luôn mạnh khỏe, yêu đời và mãi nụ cười rạng rỡ như những đóa hoa này!'*\n\n" +
                        "2. *'Mẹ là đóa hoa đẹp nhất trong cuộc đời con. Chúc người phụ nữ vĩ đại nhất của gia đình ta một ngày tràn ngập niềm vui và hạnh phúc!'*";
             }
-            if (query.Contains("khai trương"))
+
+            if (lowerMessage.Contains("khai trương"))
             {
                 return "💌 **Gợi ý lời chúc Khai Trương hồng phát:**\n\n" +
                        "1. *'Chúc Công ty/Cửa hàng khai trương hồng phát, tài lộc dồi dào, vạn sự hanh thông và ngày càng phát triển thịnh vượng!'*\n\n" +
                        "2. *'Mừng bạn mở rộng chi nhánh mới! Chúc buôn may bán đắt, khách đến nườm nượp, tiền vô như nước!'*";
             }
+
             return "💌 **Gợi ý lời chúc Sinh Nhật / Tình Yêu ngọt ngào:**\n\n" +
                    "1. *'Chúc em tuổi mới luôn rạng rỡ, xinh đẹp và hạnh phúc. Cảm ơn em đã xuất hiện và làm cho thế giới của anh trở nên ngập tràn màu sắc!'*\n\n" +
                    "2. *'Mỗi cánh hoa thay cho một lời yêu thương chân thành nhất anh dành tặng em. Happy Birthday my love!'*";
-        }
-
-        private static string GetVietnameseOrderStatus(string status)
-        {
-            switch (status)
-            {
-                case "Pending": return "Chờ xác nhận";
-                case "Confirmed": return "Đã xác nhận";
-                case "Arranging": return "Nghệ nhân đang cắm hoa";
-                case "ProofReady": return "Đã cắm xong - Chờ khách duyệt ảnh";
-                case "Shipping": return "Shipper đang giao hàng";
-                case "Delivered": return "Đã giao hoa thành công";
-                case "Cancelled": return "Đã hủy đơn";
-                default: return status;
-            }
         }
     }
 }

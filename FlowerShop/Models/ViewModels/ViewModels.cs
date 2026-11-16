@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using FlowerShop.Models.Entities;
+using FlowerShop.Services.Pricing;
 
 namespace FlowerShop.Models.ViewModels
 {
@@ -34,36 +35,31 @@ namespace FlowerShop.Models.ViewModels
         public string CardMessage { get; set; }
         public Voucher AppliedVoucher { get; set; }
 
+        /// <summary>
+        /// Ghi chú phát sinh từ cấu hình sản phẩm (ví dụ bó hoa tự thiết kế).
+        /// Được gộp vào Order.OrderNotes khi đặt hàng.
+        /// </summary>
+        public string OrderNotes { get; set; }
+
         public decimal SubTotal => System.Linq.Enumerable.Sum(Items, i => i.TotalPrice);
         public decimal AddonTotal => System.Linq.Enumerable.Sum(Addons, a => a.TotalPrice);
 
-        public decimal DiscountAmount
-        {
-            get
-            {
-                if (AppliedVoucher == null) return 0;
-                decimal total = SubTotal + AddonTotal;
-                if (total < AppliedVoucher.MinOrderValue) return 0;
+        /// <summary>Giá trị hàng hoá (chưa gồm phí ship, chưa trừ voucher).</summary>
+        public decimal MerchandiseSubtotal => SubTotal + AddonTotal;
 
-                decimal discount = 0;
-                if (AppliedVoucher.DiscountPercent.HasValue)
-                {
-                    discount = total * (AppliedVoucher.DiscountPercent.Value / 100m);
-                    if (AppliedVoucher.MaxDiscountAmount.HasValue && discount > AppliedVoucher.MaxDiscountAmount.Value)
-                    {
-                        discount = AppliedVoucher.MaxDiscountAmount.Value;
-                    }
-                }
-                else if (AppliedVoucher.DiscountAmount.HasValue)
-                {
-                    discount = AppliedVoucher.DiscountAmount.Value;
-                }
-                return discount;
-            }
-        }
+        /// <summary>Toàn bộ công thức tiền nằm ở PricingService (1 nguồn sự thật, có unit test).</summary>
+        public CartPricing Pricing => PricingService.CalculateTotals(MerchandiseSubtotal, AppliedVoucher, DateTime.Now);
 
-        public decimal ShippingFee => (SubTotal + AddonTotal >= 500000) ? 0 : 35000;
-        public decimal TotalAmount => Math.Max(0, SubTotal + AddonTotal - DiscountAmount + ShippingFee);
+        public decimal DiscountAmount => Pricing.DiscountAmount;
+
+        public decimal ShippingFee => Pricing.ShippingFee;
+
+        public decimal TotalAmount => Pricing.TotalAmount;
+
+        public decimal AmountToFreeShipping => Pricing.AmountToFreeShipping;
+
+        public bool FreeShipping => Pricing.FreeShipping;
+
         public int TotalItemsCount => System.Linq.Enumerable.Sum(Items, i => i.Quantity);
     }
 
@@ -124,11 +120,7 @@ namespace FlowerShop.Models.ViewModels
         public string OrderNotes { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán")]
-        public string PaymentMethod { get; set; } = "VNPAY"; // VNPAY, STRIPE, VIETQR, COD
-
-        // Dành cho Stripe Card Element
-        public string StripeToken { get; set; }
-        public string StripePaymentMethodId { get; set; }
+        public string PaymentMethod { get; set; } = "SEPAY"; // SEPAY, COD
 
         public List<GreetingCard> AvailableCards { get; set; } = new List<GreetingCard>();
         public List<AddonItem> AvailableAddons { get; set; } = new List<AddonItem>();
@@ -218,5 +210,102 @@ namespace FlowerShop.Models.ViewModels
         public int TotalProductsCount { get; set; }
         public List<Order> RecentOrders { get; set; } = new List<Order>();
         public List<Product> TopProducts { get; set; } = new List<Product>();
+    }
+
+    public class LoginViewModel
+    {
+        [Required(ErrorMessage = "Vui lòng nhập Email hoặc Tên đăng nhập")]
+        public string EmailOrUsername { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu")]
+        public string Password { get; set; }
+
+        public bool RememberMe { get; set; } = true;
+        public string ReturnUrl { get; set; }
+    }
+
+    public class RegisterViewModel
+    {
+        [Required(ErrorMessage = "Vui lòng nhập họ và tên")]
+        [StringLength(150)]
+        public string FullName { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng nhập địa chỉ Email")]
+        [EmailAddress(ErrorMessage = "Địa chỉ Email không hợp lệ")]
+        [StringLength(100)]
+        public string Email { get; set; }
+
+        [StringLength(20)]
+        public string Phone { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu")]
+        [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]
+        public string Password { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng xác nhận mật khẩu")]
+        [Compare("Password", ErrorMessage = "Mật khẩu xác nhận không trùng khớp")]
+        public string ConfirmPassword { get; set; }
+    }
+
+    public class SystemSettingsViewModel
+    {
+        // SePay (cổng thanh toán online duy nhất): https://docs.sepay.vn
+        public string SePayEnv { get; set; }
+        public string SePayMode { get; set; }
+        public string SePayMerchantId { get; set; }
+        public string SePaySecretKey { get; set; }
+        public string SePayIpnSecretKey { get; set; }
+        public string SePayPaymentMethod { get; set; }
+        public string SePayBank { get; set; }
+        public string SePayAccountNumber { get; set; }
+        public string SePayAccountHolder { get; set; }
+        public string SePayWebhookHmacSecret { get; set; }
+        public string SePayWebhookApiKey { get; set; }
+        public string SePayPublicBaseUrl { get; set; }
+
+        // Chatbot AI
+        public string ChatbotFloristName { get; set; }
+        public string ChatbotGeminiApiKey { get; set; }
+
+        // Email / SMTP
+        public string SmtpHost { get; set; }
+        public string SmtpPort { get; set; }
+        public string SmtpUser { get; set; }
+        public string SmtpPassword { get; set; }
+        public string SmtpFrom { get; set; }
+        public string SmtpFromName { get; set; }
+    }
+
+    /// <summary>Bước 1: khách nhập email để nhận link đặt lại mật khẩu.</summary>
+    public class ForgotPasswordViewModel
+    {
+        [Required(ErrorMessage = "Vui lòng nhập địa chỉ email")]
+        [EmailAddress(ErrorMessage = "Địa chỉ email không hợp lệ")]
+        public string Email { get; set; }
+    }
+
+    /// <summary>Bước 2: khách mở link trong mail và đặt mật khẩu mới.</summary>
+    public class ResetPasswordViewModel
+    {
+        [Required]
+        public string Token { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới")]
+        [MinLength(8, ErrorMessage = "Mật khẩu phải có ít nhất 8 ký tự")]
+        public string Password { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng xác nhận mật khẩu")]
+        [Compare("Password", ErrorMessage = "Mật khẩu xác nhận không trùng khớp")]
+        public string ConfirmPassword { get; set; }
+    }
+
+    /// <summary>Kết quả xử lý quên mật khẩu, dùng cho cả JSON và render view.</summary>
+    public class PasswordResetOutcome
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public string Email { get; set; }
+        public bool EmailDelivered { get; set; }
+        public string DevResetUrl { get; set; }
     }
 }

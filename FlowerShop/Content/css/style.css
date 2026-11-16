@@ -1,3 +1,4 @@
+@charset "utf-8";
 /* ==========================================================================
    HỮU PHƯỚC FLORIST - MODERN SKY BLUE FLORAL BOUTIQUE DESIGN SYSTEM
    Theme: Sky Blue (#0284C7), Minimalist, Premium & Luxury
@@ -81,10 +82,18 @@ img {
     text-align: center;
     font-weight: 500;
     display: flex;
+    flex-wrap: wrap;              /* xuống dòng theo cụm, không cắt giữa câu */
     justify-content: center;
     align-items: center;
-    gap: 16px;
+    column-gap: 16px;
+    row-gap: 2px;
     letter-spacing: 0.2px;
+    line-height: 1.45;
+}
+
+/* Mỗi cụm thông báo giữ nguyên 1 dòng, không bị bẻ đôi giữa chữ */
+.announcement-bar > span {
+    white-space: nowrap;
 }
 .announcement-bar i {
     color: #E0F2FE;
@@ -108,14 +117,17 @@ img {
     margin: 0 auto;
     padding: 14px 24px;
     display: flex;
+    flex-wrap: nowrap;            /* header luôn 1 hàng */
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
 }
 .brand-logo {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex: 0 0 auto;               /* không bị co -> không bẻ dòng chữ thương hiệu */
+    white-space: nowrap;
 }
 .brand-logo .logo-icon {
     font-size: 1.85rem;
@@ -131,6 +143,7 @@ img {
     font-weight: 700;
     color: var(--dark);
     letter-spacing: -0.5px;
+    white-space: nowrap;
 }
 .brand-logo .logo-text span {
     color: var(--primary);
@@ -138,7 +151,8 @@ img {
 
 /* Header Live Search */
 .header-search {
-    flex: 0 1 380px;
+    flex: 1 1 340px;
+    min-width: 170px;
     position: relative;
 }
 .header-search input {
@@ -184,9 +198,14 @@ img {
 /* Nav Menu */
 .nav-menu {
     display: flex;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 28px;
+    gap: 24px;
     list-style: none;
+    flex: 0 0 auto;               /* menu giữ nguyên, không bị ép co */
+}
+.nav-menu li {
+    flex: 0 0 auto;
 }
 .nav-menu a {
     font-size: 0.95rem;
@@ -194,6 +213,9 @@ img {
     color: var(--text);
     position: relative;
     padding: 6px 0;
+    white-space: nowrap;          /* "Bộ Sưu Tập Hoa" không bị xuống dòng */
+    display: inline-flex;
+    align-items: center;
 }
 .nav-menu a:hover, .nav-menu a.active {
     color: var(--primary);
@@ -216,8 +238,14 @@ img {
 /* Header Action Icons */
 .header-actions {
     display: flex;
+    flex: 0 0 auto;               /* cụm icon/giỏ hàng không bị co */
     align-items: center;
     gap: 12px;
+}
+
+/* Nút "Admin" chỉ hiện ở màn hình đủ rộng (tránh dồn hàng ở header) */
+.header-admin-btn {
+    white-space: nowrap;
 }
 .btn-action-icon {
     width: 42px;
@@ -1474,6 +1502,54 @@ img {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* ---------------------------------------------------------------------------
+   Header responsive: thu gọn dần rồi ẩn bớt phần phụ, KHÔNG để chữ bị bẻ dòng
+   --------------------------------------------------------------------------- */
+@media (max-width: 1400px) {
+    .nav-menu {
+        gap: 18px;
+    }
+    .header-search {
+        flex-basis: 260px;
+    }
+}
+
+@media (max-width: 1220px) {
+    .nav-menu {
+        gap: 14px;
+    }
+    .nav-menu a {
+        font-size: 0.88rem;
+    }
+    .header-search {
+        flex-basis: 200px;
+    }
+    .header-admin-btn {
+        display: none;      /* link Admin vẫn còn trong dropdown tài khoản */
+    }
+}
+
+@media (max-width: 1080px) {
+    .header-search {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .nav-menu {
+        display: none;
+    }
+    .btn-mobile-toggle {
+        display: flex;
+    }
+    .brand-logo .logo-text {
+        font-size: 1.4rem;
+    }
+    .announcement-bar > span:nth-child(2),
+    .announcement-bar > span:nth-child(4) {
+        display: none;      /* ẩn dấu "•" khi xuống dòng theo cụm */
+    }
+}
 @media (max-width: 1024px) {
     .cart-grid-container {
         grid-template-columns: 1fr;
@@ -1542,5 +1618,118 @@ img {
     }
     .auth-card {
         padding: 30px 22px;
+    }
+}
+
+/* ===========================================================================
+   HEADER LOCK — chặn tuyệt đối việc xuống dòng trong header storefront.
+   Đặt ở cuối file để thắng mọi rule phía trên.
+   =========================================================================== */
+.main-header .header-container {
+    flex-wrap: nowrap !important;
+    align-items: center;
+}
+
+.main-header .brand-logo,
+.main-header .brand-logo .logo-text,
+.main-header .brand-logo .logo-text span,
+.main-header .nav-menu,
+.main-header .nav-menu li,
+.main-header .nav-menu a,
+.main-header .header-actions,
+.main-header .header-actions > *,
+.main-header .announcement-bar > span {
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+    hyphens: none !important;
+}
+
+.main-header .brand-logo,
+.main-header .nav-menu,
+.main-header .header-actions {
+    flex-shrink: 0 !important;
+}
+
+.main-header .nav-menu {
+    flex-wrap: nowrap !important;
+}
+
+.main-header .nav-menu a {
+    display: inline-flex;
+    align-items: center;
+}
+
+.main-header .brand-logo .logo-text {
+    display: inline-block;
+}
+
+/* ---------------------------------------------------------------------------
+   Header responsive (bản cuối, ghi đè các block phía trên)
+   Mục tiêu: ở mọi bề rộng, header chỉ chiếm 1 hàng và không chữ nào bị bẻ dòng.
+   --------------------------------------------------------------------------- */
+@media (max-width: 1400px) {
+    .main-header .header-admin-btn {
+        display: none;              /* vẫn vào Admin qua dropdown tài khoản */
+    }
+    .main-header .nav-menu {
+        gap: 18px;
+    }
+    .header-search {
+        flex-basis: 240px;
+    }
+}
+
+@media (max-width: 1220px) {
+    .main-header .brand-logo .logo-text {
+        font-size: 1.45rem;
+    }
+    .main-header .nav-menu {
+        gap: 14px;
+    }
+    .main-header .nav-menu a {
+        font-size: 0.85rem;
+    }
+    .header-search {
+        flex-basis: 200px;
+    }
+}
+
+@media (max-width: 1120px) {
+    .header-search {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .main-header .nav-menu {
+        display: none;
+    }
+    .btn-mobile-toggle {
+        display: flex;
+    }
+    .main-header .brand-logo .logo-text {
+        font-size: 1.35rem;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Tinh chỉnh cuối: ô tìm kiếm rộng rãi, ẩn nút Admin sớm để nhường chỗ
+   --------------------------------------------------------------------------- */
+.main-header .header-search {
+    flex: 1 1 360px;
+    min-width: 190px;
+    max-width: 520px;
+}
+
+@media (max-width: 1500px) {
+    .main-header .header-admin-btn {
+        display: none;
+    }
+}
+
+@media (min-width: 1501px) {
+    .main-header .header-container {
+        max-width: 1440px;
     }
 }

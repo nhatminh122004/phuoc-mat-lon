@@ -1,5 +1,7 @@
 @{
     ViewBag.Title = "Đăng Nhập - Hữu Phước Florist";
+    var returnUrl = ViewBag.ReturnUrl as string ?? Request.QueryString["returnUrl"] ?? "";
+    var authError = ViewBag.AuthError as string;
 }
 
 <section class="auth-page-section">
@@ -14,14 +16,23 @@
         </div>
 
         <!-- Feedback Alert Container -->
-        <div id="loginAlert" class="auth-alert"></div>
+        <div id="loginAlert" class="auth-alert @(string.IsNullOrEmpty(authError) ? "" : "auth-alert-error")" style="@(string.IsNullOrEmpty(authError) ? "display:none;" : "display:flex;")">
+            @if (!string.IsNullOrEmpty(authError))
+            {
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>@authError</span>
+            }
+        </div>
 
-        <form id="loginForm" onsubmit="BloomAuth.handleLogin(event)">
-            <!-- Email Input -->
+        <form id="loginForm" action="/Account/Login" method="post" onsubmit="BloomAuth.handleLogin(event)">
+    @Html.AntiForgeryToken()
+            <input type="hidden" id="loginReturnUrl" name="returnUrl" value="@returnUrl" />
+
+            <!-- Email or Username Input -->
             <div class="form-group">
-                <label class="form-label" for="loginEmail">Địa chỉ Email</label>
+                <label class="form-label" for="loginEmail">Email hoặc Tên đăng nhập</label>
                 <div class="input-with-icon">
-                    <input type="email" id="loginEmail" class="form-control" placeholder="nhapemail@domain.com" autocomplete="email" />
+                    <input type="text" id="loginEmail" name="email" class="form-control" placeholder="nhapemail@domain.com hoặc admin" autocomplete="username" />
                     <i class="fa-regular fa-envelope input-icon"></i>
                 </div>
             </div>
@@ -30,7 +41,7 @@
             <div class="form-group">
                 <label class="form-label" for="loginPassword">Mật khẩu</label>
                 <div class="input-with-icon">
-                    <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" autocomplete="current-password" />
+                    <input type="password" id="loginPassword" name="password" class="form-control" placeholder="••••••••" autocomplete="current-password" />
                     <i class="fa-solid fa-lock input-icon"></i>
                     <button type="button" class="password-toggle-btn" onclick="BloomAuth.togglePassword('loginPassword', this)" title="Hiện/ẩn mật khẩu">
                         <i class="fa-regular fa-eye"></i>
@@ -41,7 +52,7 @@
             <!-- Remember me & Forgot Password -->
             <div class="form-options">
                 <label class="checkbox-label">
-                    <input type="checkbox" id="rememberMe" checked />
+                    <input type="checkbox" id="rememberMe" name="rememberMe" value="true" checked />
                     <span>Ghi nhớ đăng nhập</span>
                 </label>
                 <a href="/Account/ForgotPassword" class="auth-link">Quên mật khẩu?</a>

@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Linq;
 using FlowerShop.Models.Entities;
 
 namespace FlowerShop.DAL
@@ -15,6 +16,14 @@ namespace FlowerShop.DAL
 
         public static void SeedDatabase(FlowerShopDbContext context)
         {
+            // Idempotent: nếu DB đã có dữ liệu (ví dụ import từ file dump trên Laragon)
+            // thì chỉ bổ sung chỉ mục còn thiếu, không seed lại để tránh nhân đôi dữ liệu.
+            if (context.Products.Any() || context.Categories.Any())
+            {
+                DbIndexProvisioner.EnsureIndexes(context);
+                return;
+            }
+
             // 1. Categories
             var catBoHoa = new Category
             {
@@ -259,6 +268,13 @@ namespace FlowerShop.DAL
             context.Products.AddRange(products);
             context.SaveChanges();
 
+            // 4b. Bổ sung 16 sản phẩm + gallery + review (tổng 24 sản phẩm, khớp file dump SQL)
+            var categoryIds = context.Categories.ToDictionary(c => c.Slug, c => c.Id);
+            var occasionIds = context.Occasions.ToDictionary(o => o.Slug, o => o.Id);
+            var flowerTypeIds = context.FlowerTypes.ToDictionary(f => f.Slug, f => f.Id);
+
+            SeedCatalog.Apply(context, categoryIds, occasionIds, flowerTypeIds);
+
             // 5. AddonItems
             var addons = new List<AddonItem>
             {
@@ -296,8 +312,8 @@ namespace FlowerShop.DAL
             var adminUser = new User
             {
                 Username = "admin",
-                // Mật khẩu mặc định: Admin@123
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+                // Mật khẩu mặc định: Admin@123 (băm BCrypt, không lưu plaintext)
+                PasswordHash = FlowerShop.Services.Security.PasswordService.Hash("Admin@123"),
                 FullName = "Quản Trị Viên Shop Hoa",
                 Email = "admin@flowershop.vn",
                 Phone = "0909123456",
@@ -306,6 +322,16 @@ namespace FlowerShop.DAL
             };
             context.Users.Add(adminUser);
             context.SaveChanges();
+
+            // 9. Khách hàng / nghệ nhân mẫu
+            SeedCatalog.SeedCustomers(context);
+
+            // 10. Đơn hàng demo (Dashboard + OrderTracking + Chatbot có dữ liệu thật)
+            int firstCardId = context.GreetingCards.Select(c => c.Id).FirstOrDefault();
+            SeedCatalog.SeedDemoOrders(context, firstCardId);
+
+            // 11. Chỉ mục cho tải truy vấn lớn (idempotent)
+            DbIndexProvisioner.EnsureIndexes(context);
         }
     }
 }

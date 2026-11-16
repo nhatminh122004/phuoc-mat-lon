@@ -1,4 +1,4 @@
-@model FlowerShop.Models.ViewModels.CheckoutViewModel
+﻿@model FlowerShop.Models.ViewModels.CheckoutViewModel
 @{
     ViewBag.Title = "Thanh Toán Đặt Hoa - Hữu Phước Florist";
 }
@@ -144,30 +144,12 @@
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <!-- VNPAY -->
+                        <!-- SEPAY (SePay payment gateway) -->
                         <label style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 2px solid var(--primary); border-radius: 12px; cursor: pointer; background: #fff;">
-                            <input type="radio" name="PaymentMethod" value="VNPAY" checked />
+                            <input type="radio" name="PaymentMethod" value="SEPAY" checked />
                             <div style="flex: 1;">
-                                <div style="font-weight: 700; font-size: 0.95rem; color: #005baa;"><i class="fa-solid fa-qrcode"></i> Cổng VNPAY (QR Pay, Thẻ ATM 30+ Ngân Hàng, Visa/Master)</div>
-                                <div style="font-size: 0.8rem; color: #666;">Quét mã thanh toán tức thì qua Mobile Banking của Vietcombank, BIDV, Techcombank, MB, MoMo...</div>
-                            </div>
-                        </label>
-
-                        <!-- STRIPE -->
-                        <label style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; background: #fff;">
-                            <input type="radio" name="PaymentMethod" value="STRIPE" />
-                            <div style="flex: 1;">
-                                <div style="font-weight: 700; font-size: 0.95rem; color: #635bff;"><i class="fa-brands fa-stripe"></i> Cổng Quốc Tế Stripe (Credit / Debit Card)</div>
-                                <div style="font-size: 0.8rem; color: #666;">Dành riêng cho khách Kiều Bào hoặc thẻ quốc tế (Visa, Mastercard, Amex). Bảo mật chuẩn PCI-DSS 3D Secure.</div>
-                            </div>
-                        </label>
-
-                        <!-- VIETQR -->
-                        <label style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; background: #fff;">
-                            <input type="radio" name="PaymentMethod" value="VIETQR" />
-                            <div style="flex: 1;">
-                                <div style="font-weight: 700; font-size: 0.95rem; color: #005030;"><i class="fa-solid fa-building-columns"></i> Quét Mã VietQR Chuyển Khoản Nhanh 24/7</div>
-                                <div style="font-size: 0.8rem; color: #666;">Tự động chèn đúng số tiền và nội dung chuyển khoản, không sợ nhầm lẫn.</div>
+                                <div style="font-weight: 700; font-size: 0.95rem; color: #005baa;"><i class="fa-solid fa-qrcode"></i> Thanh toán SePay (QR chuyển khoản, thẻ ATM/NAPAS, Visa-Master)</div>
+                                <div style="font-size: 0.8rem; color: #666;">Quét QR bằng app ngân hàng bất kỳ - đơn hàng được xác nhận tự động qua SePay.</div>
                             </div>
                         </label>
 

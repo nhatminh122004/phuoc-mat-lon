@@ -1,5 +1,6 @@
 @{
     ViewBag.Title = "Đăng Ký Tài Khoản - Hữu Phước Florist";
+    var authError = ViewBag.AuthError as string;
 }
 
 <section class="auth-page-section">
@@ -14,32 +15,48 @@
         </div>
 
         <!-- Feedback Alert Container -->
-        <div id="registerAlert" class="auth-alert"></div>
+        <div id="registerAlert" class="auth-alert @(string.IsNullOrEmpty(authError) ? "" : "auth-alert-error")" style="@(string.IsNullOrEmpty(authError) ? "display:none;" : "display:flex;")">
+            @if (!string.IsNullOrEmpty(authError))
+            {
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>@authError</span>
+            }
+        </div>
 
-        <form id="registerForm" onsubmit="BloomAuth.handleRegister(event)">
+        <form id="registerForm" action="/Account/Register" method="post" onsubmit="BloomAuth.handleRegister(event)">
+    @Html.AntiForgeryToken()
             <!-- Full Name -->
             <div class="form-group">
-                <label class="form-label" for="regFullName">Họ và tên</label>
+                <label class="form-label" for="regFullName">Họ và tên *</label>
                 <div class="input-with-icon">
-                    <input type="text" id="regFullName" class="form-control" placeholder="Nguyễn Văn A" autocomplete="name" />
+                    <input type="text" id="regFullName" name="fullName" class="form-control" placeholder="Nguyễn Văn A" autocomplete="name" />
                     <i class="fa-regular fa-user input-icon"></i>
                 </div>
             </div>
 
             <!-- Email -->
             <div class="form-group">
-                <label class="form-label" for="regEmail">Địa chỉ Email</label>
+                <label class="form-label" for="regEmail">Địa chỉ Email *</label>
                 <div class="input-with-icon">
-                    <input type="email" id="regEmail" class="form-control" placeholder="nhapemail@domain.com" autocomplete="email" />
+                    <input type="email" id="regEmail" name="email" class="form-control" placeholder="nhapemail@domain.com" autocomplete="email" />
                     <i class="fa-regular fa-envelope input-icon"></i>
+                </div>
+            </div>
+
+            <!-- Phone -->
+            <div class="form-group">
+                <label class="form-label" for="regPhone">Số điện thoại</label>
+                <div class="input-with-icon">
+                    <input type="tel" id="regPhone" name="phone" class="form-control" placeholder="0909 123 456" autocomplete="tel" />
+                    <i class="fa-solid fa-phone input-icon"></i>
                 </div>
             </div>
 
             <!-- Password -->
             <div class="form-group">
-                <label class="form-label" for="regPassword">Mật khẩu</label>
+                <label class="form-label" for="regPassword">Mật khẩu *</label>
                 <div class="input-with-icon">
-                    <input type="password" id="regPassword" class="form-control" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password" />
+                    <input type="password" id="regPassword" name="password" class="form-control" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password" />
                     <i class="fa-solid fa-lock input-icon"></i>
                     <button type="button" class="password-toggle-btn" onclick="BloomAuth.togglePassword('regPassword', this)" title="Hiện/ẩn mật khẩu">
                         <i class="fa-regular fa-eye"></i>
@@ -49,9 +66,9 @@
 
             <!-- Confirm Password -->
             <div class="form-group">
-                <label class="form-label" for="regConfirmPassword">Xác nhận mật khẩu</label>
+                <label class="form-label" for="regConfirmPassword">Xác nhận mật khẩu *</label>
                 <div class="input-with-icon">
-                    <input type="password" id="regConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" autocomplete="new-password" />
+                    <input type="password" id="regConfirmPassword" name="confirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" autocomplete="new-password" />
                     <i class="fa-solid fa-shield-halved input-icon"></i>
                     <button type="button" class="password-toggle-btn" onclick="BloomAuth.togglePassword('regConfirmPassword', this)" title="Hiện/ẩn mật khẩu">
                         <i class="fa-regular fa-eye"></i>

@@ -11,7 +11,14 @@
 </div>
 
 <div class="admin-card-box" style="max-width: 900px;">
-    @using (Html.BeginForm("Create", "Product", FormMethod.Post))
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 18px; border-radius: 10px; margin-bottom: 16px; font-size: 0.88rem;">
+            <i class="fa-solid fa-circle-exclamation"></i> <strong>Chưa lưu được:</strong> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @using (Html.BeginForm("Create", "Product", FormMethod.Post, new { enctype = "multipart/form-data" }))
     {
         @Html.AntiForgeryToken()
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
@@ -30,15 +37,15 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div>
                 <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Danh mục dáng cắm *</label>
-                @Html.DropDownList("CategoryId", null, new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+                @Html.DropDownList("CategoryId", (SelectList)ViewBag.Categories, new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
             </div>
             <div>
                 <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Chủ đề dịp tặng</label>
-                @Html.DropDownList("OccasionId", null, "-- Chọn dịp --", new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+                @Html.DropDownList("OccasionId", (SelectList)ViewBag.Occasions, "-- Chọn dịp --", new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
             </div>
             <div>
                 <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Loài hoa chính</label>
-                @Html.DropDownList("FlowerTypeId", null, "-- Chọn loài hoa --", new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+                @Html.DropDownList("FlowerTypeId", (SelectList)ViewBag.FlowerTypes, "-- Chọn loài hoa --", new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
             </div>
         </div>
 
@@ -61,10 +68,39 @@
             </div>
         </div>
 
-        <div style="margin-bottom: 16px;">
-            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Link ảnh đại diện chính (URL) *</label>
-            @Html.TextBoxFor(m => m.MainImageUrl, new { required = "required", placeholder = "https://images.unsplash.com/...", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+        <div style="margin-bottom: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px dashed var(--admin-border);">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">
+                    <i class="fa-solid fa-images" style="color: var(--admin-primary);"></i> Tải Nhiều Ảnh Sản Phẩm (Multi-files):
+                </label>
+                <input type="file" name="imageFiles" multiple accept="image/*" onchange="previewNewProductImgs(this)" style="width: 100%; font-size: 0.85rem;" />
+                <div style="font-size: 0.76rem; color: #64748b; margin-top: 4px;">Ảnh đầu tiên sẽ làm ảnh đại diện chính, các ảnh còn lại tự động đưa vào Bộ sưu tập ảnh chi tiết.</div>
+                <div id="createImgPreviewBox" style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;"></div>
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Hoặc dán Link ảnh đại diện (URL):</label>
+                @Html.TextBoxFor(m => m.MainImageUrl, new { placeholder = "https://images.unsplash.com/...", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
         </div>
+        <script>
+            function previewNewProductImgs(input) {
+                var box = document.getElementById('createImgPreviewBox');
+                box.innerHTML = '';
+                if (input.files && input.files.length > 0) {
+                    Array.from(input.files).forEach(function (file, idx) {
+                        var r = new FileReader();
+                        r.onload = function (e) {
+                            var img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.title = idx === 0 ? 'Ảnh đại diện chính' : 'Ảnh phụ #' + idx;
+                            img.style.cssText = 'width: 76px; height: 76px; border-radius: 8px; object-fit: cover; border: 2px solid ' + (idx === 0 ? 'var(--admin-primary)' : 'var(--admin-border)') + ';';
+                            box.appendChild(img);
+                        };
+                        r.readAsDataURL(file);
+                    });
+                }
+            }
+        </script>
 
         <div style="margin-bottom: 16px;">
             <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Mô tả ngắn</label>
@@ -93,6 +129,10 @@
             <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
                 @Html.CheckBoxFor(m => m.IsFlashSale)
                 <span>Flash Sale Giờ Vàng</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                @Html.CheckBoxFor(m => m.IsActive, new { @checked = "checked" })
+                <span>Hiển Thị Ngay (Active)</span>
             </label>
         </div>
 

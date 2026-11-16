@@ -78,6 +78,7 @@
                     @foreach (var addon in addons.Take(4))
                     {
                         <form action="/Cart/AddAddon" method="post" style="margin: 0;">
+                            @Html.AntiForgeryToken()
                             <input type="hidden" name="addonId" value="@addon.Id" />
                             <button type="submit" style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px; background: #fcf9f9; border: 1px solid #f2e3e5; border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.2s;">
                                 <img src="@addon.ImageUrl" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;" />
@@ -94,6 +95,7 @@
 
             <!-- Form Add to Cart -->
             <form action="/Cart/AddToCart" method="post" style="display: flex; gap: 16px; margin-bottom: 30px;">
+                @Html.AntiForgeryToken()
                 <input type="hidden" name="productId" value="@Model.Id" />
                 <div style="display: flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius-full); background: #fff; padding: 0 12px;">
                     <button type="button" onclick="let q = document.getElementById('itemQty'); if(q.value > 1) q.value--;" style="background: none; border: none; font-size: 1.1rem; cursor: pointer; padding: 10px;">-</button>
@@ -141,6 +143,142 @@
                 <p style="color: var(--text-muted); line-height: 1.6; margin: 0;">@Model.FlowerCareGuide</p>
             </div>
         }
+    </div>
+
+    <!-- Customer Reviews Section -->
+    @{
+        var approvedReviews = Model.Reviews != null
+            ? Model.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt).ToList()
+            : new List<FlowerShop.Models.Entities.Review>();
+    }
+    <div id="reviews-section" style="background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 36px; box-shadow: var(--shadow-sm); margin-bottom: 70px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--border);">
+            <div>
+                <h3 class="font-serif" style="font-size: 1.5rem; margin: 0 0 6px; color: var(--dark);">
+                    <i class="fa-solid fa-star" style="color: #ffb800; margin-right: 8px;"></i> Đánh Giá Từ Khách Hàng (@Model.ReviewCount)
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Chia sẻ cảm nhận thực tế của quý khách sau khi nhận hoa từ Hữu Phước Florist.</p>
+            </div>
+            <div style="text-align: right; background: var(--bg-body); padding: 12px 20px; border-radius: 14px;">
+                <span style="font-size: 1.8rem; font-weight: 800; color: var(--primary);">@Model.RatingAvg.ToString("0.0")</span>
+                <span style="color: var(--text-muted); font-size: 0.9rem;">/ 5.0 sao</span>
+            </div>
+        </div>
+
+        @if (TempData["ReviewSuccess"] != null)
+        {
+            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+                <i class="fa-solid fa-circle-check"></i> @TempData["ReviewSuccess"]
+            </div>
+        }
+        @if (TempData["ReviewError"] != null)
+        {
+            <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+                <i class="fa-solid fa-circle-exclamation"></i> @TempData["ReviewError"]
+            </div>
+        }
+
+        <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 36px; align-items: start;">
+            <!-- Left: Review List -->
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                @if (approvedReviews.Any())
+                {
+                    foreach (var rev in approvedReviews)
+                    {
+                        <div style="padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: #fcfdfe;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div style="font-weight: 700; color: var(--dark);">
+                                    <i class="fa-solid fa-circle-user" style="color: var(--primary); margin-right: 6px;"></i> @rev.CustomerName
+                                </div>
+                                <span style="font-size: 0.78rem; color: var(--text-muted);">@rev.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            <div style="color: #ffb800; font-size: 0.82rem; margin-bottom: 8px;">
+                                @for (int s = 1; s <= 5; s++)
+                                {
+                                    <i class="@(s <= rev.Rating ? "fa-solid" : "fa-regular") fa-star"></i>
+                                }
+                            </div>
+                            <p style="margin: 0; color: #334155; font-size: 0.92rem; line-height: 1.6;">@rev.Comment</p>
+                            @if (!string.IsNullOrEmpty(rev.ImageUrl))
+                            {
+                                var revImages = rev.ImageUrl.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                    @foreach (var rImg in revImages)
+                                    {
+                                        <img src="@rImg.Trim()" alt="Ảnh đánh giá" onclick="Swal.fire({ imageUrl: '@rImg.Trim()', showConfirmButton: false, showCloseButton: true })" style="width: 96px; height: 96px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); cursor: zoom-in;" />
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div style="padding: 28px; text-align: center; background: #f8fafc; border-radius: 14px; color: var(--text-muted);">
+                        <i class="fa-regular fa-comment-dots" style="font-size: 2rem; color: var(--primary); margin-bottom: 10px; display: block;"></i>
+                        Hãy là khách hàng đầu tiên để lại nhận xét chi tiết cho mẫu hoa nghệ thuật này!
+                    </div>
+                }
+            </div>
+
+            <!-- Right: Submit Review Form -->
+            <div style="background: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid var(--border);">
+                <h4 class="font-serif" style="font-size: 1.2rem; margin: 0 0 16px; color: var(--dark);">Viết Đánh Giá Của Bạn</h4>
+                <form action="/Product/AddReview" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@Model.Id" />
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Mức độ hài lòng:</label>
+                        <select name="rating" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); outline: none; font-weight: 600; color: #d97706;">
+                            <option value="5">⭐⭐⭐⭐⭐ (5/5 - Tuyệt vời)</option>
+                            <option value="4">⭐⭐⭐⭐ (4/5 - Hài lòng)</option>
+                            <option value="3">⭐⭐⭐ (3/5 - Bình thường)</option>
+                            <option value="2">⭐⭐ (2/5 - Chưa ưng ý)</option>
+                            <option value="1">⭐ (1/5 - Cần cải thiện)</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Tên của bạn *</label>
+                        <input type="text" name="customerName" value="@(Session["FullName"] as string ?? "")" required placeholder="Nhập họ tên của bạn..." style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); outline: none;" />
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Nhận xét về bó hoa *</label>
+                        <textarea name="comment" rows="3" required placeholder="Hoa tươi, cắm đẹp đúng mẫu, giao nhanh đúng giờ..." style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); outline: none; font-family: inherit;"></textarea>
+                    </div>
+
+                    <div style="margin-bottom: 18px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Đính kèm nhiều ảnh hoa thực tế (Multi-files):</label>
+                        <input type="file" name="reviewImageFiles" multiple accept="image/*" onchange="previewReviewImgs(this)" style="font-size: 0.82rem; width: 100%;" />
+                        <div id="reviewMultiPreview" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+                        <i class="fa-solid fa-paper-plane"></i> Gửi Đánh Giá
+                    </button>
+                </form>
+                <script>
+                    function previewReviewImgs(input) {
+                        var box = document.getElementById('reviewMultiPreview');
+                        box.innerHTML = '';
+                        if (input.files && input.files.length > 0) {
+                            Array.from(input.files).forEach(function (file) {
+                                var r = new FileReader();
+                                r.onload = function (e) {
+                                    var img = document.createElement('img');
+                                    img.src = e.target.result;
+                                    img.style.cssText = 'width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid var(--primary);';
+                                    box.appendChild(img);
+                                };
+                                r.readAsDataURL(file);
+                            });
+                        }
+                    }
+                </script>
+            </div>
+        </div>
     </div>
 
     <!-- Related Products -->

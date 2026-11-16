@@ -1,4 +1,4 @@
-@model List<FlowerShop.Models.Entities.Order>
+﻿@model List<FlowerShop.Models.Entities.Order>
 @{
     ViewBag.Title = "Quản Lý Đơn Hàng & Điều Phối Cắm Hoa - Admin";
 }
@@ -55,51 +55,60 @@
                                     <span style="display: block; font-size: 0.72rem; color: #c84b61;"><i class="fa-solid fa-mask"></i> Ẩn danh</span>
                                 }
                             </td>
-                            <td>
-                                <div>@order.SenderName</div>
+                            <td class="col-person"><div>@order.SenderName</div>
                                 <div style="font-size: 0.8rem; color: #888;">@order.SenderPhone</div>
                             </td>
-                            <td>
-                                <div><strong>@order.RecipientName</strong></div>
-                                <div style="font-size: 0.8rem; color: #888; max-width: 200px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">@order.RecipientAddress</div>
+                            <td class="col-person"><div><strong>@order.RecipientName</strong></div>
+                                <div class="cell-sub" style="font-size: 0.8rem; color: #888; max-width: 260px;">@order.RecipientAddress</div>
                             </td>
-                            <td>
-                                <div>@order.DeliveryDate.ToString("dd/MM/yyyy")</div>
+                            <td class="col-datetime"><div>@order.DeliveryDate.ToString("dd/MM/yyyy")</div>
                                 <div style="font-size: 0.8rem; color: #c84b61; font-weight: 600;">@order.DeliveryTimeSlot</div>
                             </td>
-                            <td>
-                                <strong>@order.TotalAmount.ToString("N0") đ</strong>
-                            </td>
+                            <td class="amount-cell"><strong>@order.TotalAmount.ToString("N0") đ</strong></td>
                             <td>
                                 <span class="status-pill @(order.PaymentStatus == "Paid" ? "pill-delivered" : "pill-pending")">@order.PaymentMethod (@order.PaymentStatus)</span>
                             </td>
-                            <td>
+                            <td style="text-align: center;">
                                 @if (!string.IsNullOrEmpty(order.ProofPhotoUrl))
                                 {
-                                    <span style="color: #2e7d32; font-size: 0.85rem; font-weight: 600;"><i class="fa-solid fa-image"></i> Đã có ảnh</span>
+                                    <span class="status-pill pill-delivered" title="Đã có ảnh hoa thực tế"><i class="fa-solid fa-image"></i></span>
                                 }
                                 else
                                 {
-                                    <span style="color: #888; font-size: 0.85rem;"><i class="fa-regular fa-image"></i> Chưa chụp</span>
+                                    <span class="status-pill pill-pending" title="Chưa chụp ảnh"><i class="fa-regular fa-image"></i></span>
                                 }
                             </td>
                             <td>
                                 @{
                                     string pillClass = "pill-pending";
-                                    if (order.OrderStatus == "Confirmed") pillClass = "pill-confirmed";
-                                    if (order.OrderStatus == "Arranging") pillClass = "pill-arranging";
-                                    if (order.OrderStatus == "Shipping") pillClass = "pill-shipping";
-                                    if (order.OrderStatus == "Delivered") pillClass = "pill-delivered";
+                                    if (order.OrderStatus == "Confirmed") { pillClass = "pill-confirmed"; }
+                                    if (order.OrderStatus == "Arranging") { pillClass = "pill-arranging"; }
+                                    if (order.OrderStatus == "Shipping") { pillClass = "pill-shipping"; }
+                                    if (order.OrderStatus == "Delivered") { pillClass = "pill-delivered"; }
                                 }
                                 <span class="status-pill @pillClass">@order.OrderStatus</span>
                             </td>
-                            <td>
-                                <a href="/Admin/Order/Details/@order.Id" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.8rem;">Xử Lý</a>
+                            <td class="actions-cell">
+                                <div class="row-actions">
+                                    <a href="/Admin/Order/Details/@order.Id" class="btn btn-primary btn-sm" title="Xem & xử lý đơn"><i class="fa-solid fa-pen-to-square"></i> Xử Lý</a>
+                                    <a href="/Admin/Order/PrintSlip/@order.Id" target="_blank" class="btn btn-secondary btn-sm" title="In phiếu giao hoa"><i class="fa-solid fa-print"></i> In</a>
+                                </div>
                             </td>
                         </tr>
                     }
                 }
             </tbody>
         </table>
+
+        @if ((int)ViewBag.TotalPages > 1)
+        {
+            <div style="display: flex; gap: 6px; justify-content: center; margin-top: 20px;">
+                @for (int p = 1; p <= (int)ViewBag.TotalPages; p++)
+                {
+                    <a href="@Url.Action("Index", new { status = ViewBag.CurrentStatus, search = ViewBag.SearchTerm, page = p })"
+                       class="btn btn-sm @(p == (int)ViewBag.Page ? "btn-primary" : "btn-secondary")">@p</a>
+                }
+            </div>
+        }
     </div>
 </div>

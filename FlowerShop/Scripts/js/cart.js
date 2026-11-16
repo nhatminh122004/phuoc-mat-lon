@@ -1,242 +1,239 @@
 /**
- * HỮU PHƯỚC FLORIST - MODERN E-COMMERCE CART & CLIENT-SIDE STATE
- * Handles real-time Cart operations, Voucher validation, LocalStorage persistence,
- * and Header badge synchronization.
+ * FLOWER BOUTIQUE - CART (server-driven)
+ * -----------------------------------------------------------------------------
+ * Nguyên tắc: SERVER LÀ NGUỒN SỰ THẬT DUY NHẤT.
+ *  - Không còn localStorage cart, không tự tính tiền ở client.
+ *  - Mọi con số (tạm tính, phí ship, giảm giá, tổng) lấy từ /Cart/GetCartJson
+ *    (server dùng PricingService - cùng công thức với Checkout).
  */
-
 const BloomCart = (function () {
-    const STORAGE_KEY = 'bloom_grace_cart';
-    const FREE_SHIPPING_THRESHOLD = 1000000; // 1.000.000 đ
-    const DEFAULT_SHIPPING_FEE = 30000;      // 30.000 đ
+    'use strict';
 
-    // Sample initial items if user visits for the first time
-    const defaultInitialItems = [
-        {
-            productId: 1,
-            name: "Bó Hoa Hồng Đỏ Ecuador 'Red Romance'",
-            slug: "bo-hoa-hong-do-ecuador-red-romance",
-            category: "Bó Hoa Tươi",
-            price: 850000,
-            qty: 1,
-            image: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=400&q=80"
-        },
-        {
-            productId: 2,
-            name: "Bó Hoa Tulip Hồng 'Sweet Whispers'",
-            slug: "bo-hoa-tulip-hong-sweet-whispers",
-            category: "Bó Hoa Tươi",
-            price: 1050000,
-            qty: 1,
-            image: "https://images.unsplash.com/photo-1520763185298-1b434c919102?auto=format&fit=crop&w=400&q=80"
-        }
-    ];
+    const API = {
+        get: '/Cart/GetCartJson',
+        miniCart: '/Cart/GetMiniCart',
+        add: '/Cart/AddToCart',
+        update: '/Cart/UpdateQuantity',
+        remove: '/Cart/RemoveItem',
+        clear: '/Cart/ClearCart',
+        addAddon: '/Cart/AddAddon',
+        removeAddon: '/Cart/RemoveAddon',
+        voucher: '/Cart/ApplyVoucher'
+    };
 
-    function getCart() {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultInitialItems));
-                return defaultInitialItems;
-            }
-            return JSON.parse(raw);
-        } catch (e) {
-            return defaultInitialItems;
-        }
-    }
+    let state = emptyState();
 
-    function saveCart(items) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-        updateHeaderBadge();
-    }
-
-    function formatMoney(amount) {
-        return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
-    }
-
-    function calculateTotals(items) {
-        const subTotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        const count = items.reduce((sum, item) => sum + item.qty, 0);
-        const shippingFee = (subTotal >= FREE_SHIPPING_THRESHOLD || subTotal === 0) ? 0 : DEFAULT_SHIPPING_FEE;
-        
-        let discount = 0;
-        const voucherCode = sessionStorage.getItem('bloom_voucher') || '';
-        if (voucherCode === 'BLOOM10') {
-            discount = Math.round(subTotal * 0.1);
-        } else if (voucherCode === 'WELCOME50') {
-            discount = Math.min(50000, subTotal);
-        } else if (voucherCode === 'SKYBLUE') {
-            discount = Math.min(100000, subTotal);
-        }
-
-        const total = Math.max(0, subTotal + shippingFee - discount);
-
+    function emptyState() {
         return {
-            subTotal,
-            count,
-            shippingFee,
-            discount,
-            voucherCode,
-            total
+            items: [],
+            addons: [],
+            totalItems: 0,
+            subTotal: 0,
+            addonTotal: 0,
+            shippingFee: 0,
+            discountAmount: 0,
+            totalAmount: 0,
+            voucherCode: '',
+            freeShipping: false,
+            amountToFreeShipping: 0,
+            freeShippingThreshold: 500000
         };
     }
 
+    function formatMoney(amount) {
+        return new Intl.NumberFormat('vi-VN').format(amount || 0) + ' đ';
+    }
+
+    function applyServerResponse(data) {
+        if (!data) return;
+
+        state = {
+            items: data.items || [],
+            addons: data.addons || [],
+            totalItems: data.totalItems || 0,
+            subTotal: data.subTotal || 0,
+            addonTotal: data.addonTotal || 0,
+            shippingFee: data.shippingFee || 0,
+            discountAmount: data.discountAmount || 0,
+            totalAmount: data.totalAmount || 0,
+            voucherCode: data.voucherCode || '',
+            freeShipping: !!data.freeShipping,
+            amountToFreeShipping: data.amountToFreeShipping || 0,
+            freeShippingThreshold: data.freeShippingThreshold || 500000
+        };
+
+        updateHeaderBadge();
+        renderCartPage();
+        renderMiniCartBadge();
+    }
+
+    function syncFromServer() {
+        return fetch(API.get, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) { applyServerResponse(data); return state; })
+            .catch(function () { return state; });
+    }
+
     function updateHeaderBadge() {
-        const items = getCart();
-        const totals = calculateTotals(items);
-        const badges = document.querySelectorAll('.js-cart-count');
-        badges.forEach(b => {
-            b.textContent = totals.count;
-            b.style.display = totals.count > 0 ? 'flex' : 'none';
+        document.querySelectorAll('.js-cart-count').forEach(function (el) {
+            el.textContent = state.totalItems;
         });
     }
 
-    function addToCart(product, quantity = 1) {
-        const items = getCart();
-        const existing = items.find(i => i.productId === product.productId);
-        if (existing) {
-            existing.qty += quantity;
-        } else {
-            items.push({
-                productId: product.productId,
-                name: product.name,
-                slug: product.slug || '',
-                category: product.category || 'Hoa Tươi',
-                price: product.price,
-                qty: quantity,
-                image: product.image
-            });
+    function renderMiniCartBadge() {
+        const badge = document.querySelector('.js-mini-cart-count');
+        if (badge) {
+            badge.textContent = state.totalItems;
         }
-        saveCart(items);
+    }
 
-        // Show elegant toast
+    function post(url, params) {
+        const body = window.BloomCsrf ? window.BloomCsrf.withToken(params) : params;
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            body: body.toString(),
+            credentials: 'same-origin'
+        }).then(function (res) { return res.json(); });
+    }
+
+    function notify(title, text, icon) {
         if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: 'Đã thêm vào giỏ hoa!',
-                text: product.name,
-                showConfirmButton: false,
-                timer: 2200,
-                timerProgressBar: true
-            });
+            Swal.fire({ icon: icon || 'success', title: title, text: text, confirmButtonColor: '#0284C7', timer: icon === 'success' ? 1800 : undefined, showConfirmButton: icon !== 'success' });
         }
+    }
+
+    function addToCart(productId, quantity) {
+        const params = new URLSearchParams();
+        params.append('productId', productId);
+        params.append('quantity', quantity || 1);
+        params.append('isAjax', 'true');
+
+        return post(API.add, params).then(function (data) {
+            applyServerResponse(data);
+            if (data.success) {
+                notify('Đã thêm vào giỏ!', data.message || 'Sản phẩm đã được thêm vào giỏ hoa của bạn.', 'success');
+            } else {
+                notify('Không thể thêm', data.message || 'Vui lòng thử lại.', 'error');
+            }
+            return data;
+        });
     }
 
     function updateQuantity(productId, newQty) {
-        let items = getCart();
-        if (newQty <= 0) {
-            removeItem(productId);
-            return;
-        }
-        const item = items.find(i => i.productId === productId);
-        if (item) {
-            item.qty = newQty;
-            saveCart(items);
-            renderCartPage();
-        }
+        const params = new URLSearchParams();
+        params.append('productId', productId);
+        params.append('quantity', newQty);
+        params.append('isAjax', 'true');
+
+        return post(API.update, params).then(function (data) { applyServerResponse(data); return data; });
     }
 
     function removeItem(productId) {
-        let items = getCart();
-        items = items.filter(i => i.productId !== productId);
-        saveCart(items);
-        renderCartPage();
+        const params = new URLSearchParams();
+        params.append('productId', productId);
+        params.append('isAjax', 'true');
 
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'info',
-                title: 'Đã xóa sản phẩm khỏi giỏ!',
-                showConfirmButton: false,
-                timer: 1800,
-                timerProgressBar: true
-            });
-        }
+        return post(API.remove, params).then(function (data) { applyServerResponse(data); return data; });
     }
 
     function clearCart() {
-        saveCart([]);
-        renderCartPage();
+        const params = new URLSearchParams();
+        params.append('isAjax', 'true');
+
+        return post(API.clear, params).then(function (data) { applyServerResponse(data); return data; });
+    }
+
+    function addAddon(addonId) {
+        const params = new URLSearchParams();
+        params.append('addonId', addonId);
+        params.append('isAjax', 'true');
+
+        return post(API.addAddon, params).then(function (data) {
+            applyServerResponse(data);
+            if (data.success) {
+                notify('Đã thêm quà tặng', data.message, 'success');
+            } else {
+                notify('Không thể thêm', data.message, 'error');
+            }
+            return data;
+        });
+    }
+
+    function removeAddon(addonId) {
+        const params = new URLSearchParams();
+        params.append('addonId', addonId);
+        params.append('isAjax', 'true');
+
+        return post(API.removeAddon, params).then(function (data) { applyServerResponse(data); return data; });
     }
 
     function applyVoucher(code) {
-        const cleanCode = (code || '').trim().toUpperCase();
-        if (cleanCode === 'BLOOM10' || cleanCode === 'WELCOME50' || cleanCode === 'SKYBLUE') {
-            sessionStorage.setItem('bloom_voucher', cleanCode);
-            renderCartPage();
-            if (typeof Swal !== 'undefined') {
-                Swal.fire('Áp Dụng Mã Thành Công!', `Mã ${cleanCode} đã được kích hoạt.`, 'success');
+        const params = new URLSearchParams();
+        params.append('code', (code || '').trim());
+        params.append('isAjax', 'true');
+
+        return post(API.voucher, params).then(function (data) {
+            applyServerResponse(data);
+            if (data.success) {
+                notify('Áp dụng thành công', data.message, 'success');
+            } else {
+                notify('Không thể áp dụng', data.message || 'Mã giảm giá không hợp lệ.', 'error');
             }
-            return true;
-        } else {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire('Mã Không Hợp Lệ', 'Vui lòng thử các mã: BLOOM10, WELCOME50 hoặc SKYBLUE', 'error');
-            }
-            return false;
-        }
+            return data;
+        });
     }
 
     function renderCartPage() {
         const container = document.getElementById('cartPageContainer');
         if (!container) return;
 
-        const items = getCart();
-        const totals = calculateTotals(items);
-
-        if (items.length === 0) {
+        if (!state.items.length && !state.addons.length) {
             container.innerHTML = `
                 <div class="empty-cart-state">
-                    <div class="empty-cart-icon">
-                        <i class="fa-solid fa-basket-shopping"></i>
-                    </div>
+                    <div class="empty-cart-icon"><i class="fa-solid fa-basket-shopping"></i></div>
                     <h3 class="font-serif">Giỏ hàng của bạn đang trống</h3>
                     <p>Có vẻ như bạn chưa chọn được bó hoa ưng ý. Hãy khám phá ngay các bộ sưu tập hoa tươi nghệ thuật mới nhất của Hữu Phước Florist!</p>
                     <a href="/Product" class="btn btn-primary btn-lg">
                         <i class="fa-solid fa-seedling"></i> Khám Phá Hoa Tươi Ngay
                     </a>
-                </div>
-            `;
+                </div>`;
             return;
         }
 
-        // Calculate progress percentage for free shipping
-        const fsProgress = Math.min(100, Math.round((totals.subTotal / FREE_SHIPPING_THRESHOLD) * 100));
-        const neededForFs = Math.max(0, FREE_SHIPPING_THRESHOLD - totals.subTotal);
+        const merchandise = state.subTotal + state.addonTotal;
+        const progress = Math.min(100, Math.round((merchandise / state.freeShippingThreshold) * 100));
 
         container.innerHTML = `
             <div class="cart-grid-container">
-                <!-- Left: Products List -->
                 <div>
-                    <!-- Free Shipping Bar -->
                     <div class="free-shipping-card">
                         <div class="free-shipping-card-text">
                             <i class="fa-solid fa-truck-fast"></i>
-                            ${fsProgress >= 100 
-                                ? '<span style="color: #0284C7;">Chúc mừng! Đơn hàng của bạn đã đủ điều kiện <strong>Miễn Phí Giao Hoa Toàn Quốc</strong></span>'
-                                : `<span>Mua thêm <strong>${formatMoney(neededForFs)}</strong> để nhận <strong>Miễn Phí Giao Hoa</strong></span>`
-                            }
+                            ${progress >= 100
+                                ? '<span style="color: #0284C7;">Chúc mừng! Đơn hàng của bạn đã đủ điều kiện <strong>Miễn Phí Giao Hoa Hỏa Tốc</strong></span>'
+                                : `<span>Mua thêm <strong>${formatMoney(state.amountToFreeShipping)}</strong> để nhận <strong>Miễn Phí Giao Hoa (Đơn từ ${formatMoney(state.freeShippingThreshold)})</strong></span>`}
                         </div>
-                        <div class="fs-progress-bg">
-                            <div class="fs-progress-fill" style="width: ${fsProgress}%;"></div>
-                        </div>
+                        <div class="fs-progress-bg"><div class="fs-progress-fill" style="width: ${progress}%;"></div></div>
                     </div>
 
-                    <!-- Cart Item Cards -->
                     <div class="cart-items-wrapper">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-                            <span style="font-weight: 700; font-size: 1.05rem; color: var(--dark);">Sản phẩm trong giỏ (${items.length})</span>
+                            <span style="font-weight: 700; font-size: 1.05rem; color: var(--dark);">Sản phẩm hoa tươi (${state.items.length})</span>
                             <button type="button" onclick="BloomCart.clearCart()" style="background: none; border: none; color: #EF4444; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
                                 <i class="fa-regular fa-trash-can"></i> Xóa tất cả
                             </button>
                         </div>
 
-                        ${items.map(item => `
+                        ${state.items.map(function (item) {
+                            return `
                             <div class="cart-item-card" id="cart-item-${item.productId}">
                                 <img src="${item.image}" alt="${item.name}" class="cart-item-img" />
                                 <div class="cart-item-info">
-                                    <span class="cart-item-category">${item.category || 'Hoa Tươi'}</span>
+                                    <span class="cart-item-category">Hoa Nghệ Thuật</span>
                                     <a href="/hoa/${item.slug}" class="cart-item-title">${item.name}</a>
                                     <div class="cart-item-price">Đơn giá: <strong>${formatMoney(item.price)}</strong></div>
                                 </div>
@@ -245,14 +242,33 @@ const BloomCart = (function () {
                                     <span>${item.qty}</span>
                                     <button type="button" onclick="BloomCart.updateQuantity(${item.productId}, ${item.qty + 1})">+</button>
                                 </div>
-                                <div class="cart-item-subtotal">
-                                    ${formatMoney(item.price * item.qty)}
-                                </div>
+                                <div class="cart-item-subtotal">${formatMoney(item.totalPrice)}</div>
                                 <button type="button" class="btn-remove-item" title="Xóa sản phẩm" onclick="BloomCart.removeItem(${item.productId})">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
-                            </div>
-                        `).join('')}
+                            </div>`;
+                        }).join('')}
+
+                        ${state.addons.length > 0 ? `
+                            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--border);">
+                                <div style="font-weight: 700; font-size: 0.95rem; color: var(--dark); margin-bottom: 12px;">
+                                    <i class="fa-solid fa-gift" style="color: var(--primary);"></i> Quà Tặng Kèm Đã Chọn (${state.addons.length})
+                                </div>
+                                ${state.addons.map(function (addon) {
+                                    return `
+                                    <div class="cart-item-card" style="padding: 12px; background: #f8fafc;">
+                                        <img src="${addon.image}" alt="${addon.name}" style="width: 54px; height: 54px; border-radius: 8px; object-fit: cover;" />
+                                        <div class="cart-item-info">
+                                            <div class="cart-item-title" style="font-size: 0.95rem;">${addon.name}</div>
+                                            <div class="cart-item-price">Số lượng: ${addon.qty} x ${formatMoney(addon.price)}</div>
+                                        </div>
+                                        <div class="cart-item-subtotal">${formatMoney(addon.totalPrice)}</div>
+                                        <button type="button" class="btn-remove-item" title="Xóa phụ kiện" onclick="BloomCart.removeAddon(${addon.addonId})">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </div>`;
+                                }).join('')}
+                            </div>` : ''}
                     </div>
 
                     <div style="margin-top: 20px;">
@@ -262,48 +278,43 @@ const BloomCart = (function () {
                     </div>
                 </div>
 
-                <!-- Right: Order Summary -->
                 <div class="order-summary-card">
                     <h3 class="summary-title font-serif">Tóm Tắt Đơn Hàng</h3>
 
                     <div class="summary-row">
-                        <span>Tổng số lượng:</span>
-                        <strong>${totals.count} sản phẩm</strong>
+                        <span>Tổng số lượng hoa:</span>
+                        <strong>${state.totalItems} sản phẩm</strong>
                     </div>
-
                     <div class="summary-row">
                         <span>Tạm tính tiền hoa:</span>
-                        <span class="val">${formatMoney(totals.subTotal)}</span>
+                        <span class="val">${formatMoney(state.subTotal)}</span>
                     </div>
-
+                    ${state.addonTotal > 0 ? `
+                        <div class="summary-row"><span>Quà tặng kèm:</span><span class="val">${formatMoney(state.addonTotal)}</span></div>` : ''}
                     <div class="summary-row">
                         <span>Phí vận chuyển:</span>
-                        <span class="val" style="${totals.shippingFee === 0 ? 'color: #0284C7; font-weight: 700;' : ''}">
-                            ${totals.shippingFee === 0 ? 'Miễn phí' : formatMoney(totals.shippingFee)}
+                        <span class="val" style="${state.shippingFee === 0 ? 'color: #0284C7; font-weight: 700;' : ''}">
+                            ${state.shippingFee === 0 ? 'Miễn phí' : formatMoney(state.shippingFee)}
                         </span>
                     </div>
-
-                    ${totals.discount > 0 ? `
+                    ${state.discountAmount > 0 ? `
                         <div class="summary-row" style="color: #0284C7;">
-                            <span>Mã giảm giá (${totals.voucherCode}):</span>
-                            <span class="val" style="color: #0284C7;">-${formatMoney(totals.discount)}</span>
-                        </div>
-                    ` : ''}
+                            <span>Mã giảm giá (${state.voucherCode}):</span>
+                            <span class="val" style="color: #0284C7;">-${formatMoney(state.discountAmount)}</span>
+                        </div>` : ''}
 
-                    <!-- Voucher code input -->
                     <div style="margin-top: 18px;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--dark);">Mã Ưu Đãi (Voucher):</label>
                         <div class="voucher-form">
-                            <input type="text" id="cartVoucherInput" placeholder="VD: SKYBLUE, BLOOM10" value="${totals.voucherCode || ''}" />
+                            <input type="text" id="cartVoucherInput" placeholder="Nhập mã giảm giá của bạn" value="${state.voucherCode || ''}" />
                             <button type="button" onclick="BloomCart.applyVoucher(document.getElementById('cartVoucherInput').value)">Áp Dụng</button>
                         </div>
                     </div>
 
                     <div class="summary-divider"></div>
-
                     <div class="summary-total-row">
                         <span>Tổng thanh toán:</span>
-                        <span class="total-amount">${formatMoney(totals.total)}</span>
+                        <span class="total-amount">${formatMoney(state.totalAmount)}</span>
                     </div>
 
                     <a href="/Checkout" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.05rem; margin-bottom: 12px;">
@@ -311,38 +322,30 @@ const BloomCart = (function () {
                     </a>
 
                     <div class="cart-guarantee-box">
-                        <div class="cart-guarantee-item">
-                            <i class="fa-solid fa-shield-halved"></i>
-                            <span>Bảo mật thanh toán 100% qua SSL 256-bit</span>
-                        </div>
-                        <div class="cart-guarantee-item">
-                            <i class="fa-solid fa-camera"></i>
-                            <span>Nghệ nhân chụp ảnh hoa thật gửi khách duyệt trước khi giao</span>
-                        </div>
-                        <div class="cart-guarantee-item">
-                            <i class="fa-solid fa-rotate-left"></i>
-                            <span>Cam kết hoa tươi tối thiểu 3 - 5 ngày</span>
-                        </div>
+                        <div class="cart-guarantee-item"><i class="fa-solid fa-shield-halved"></i><span>Bảo mật thanh toán 100% qua SSL 256-bit</span></div>
+                        <div class="cart-guarantee-item"><i class="fa-solid fa-camera"></i><span>Nghệ nhân chụp ảnh hoa thật gửi khách duyệt trước khi giao</span></div>
+                        <div class="cart-guarantee-item"><i class="fa-solid fa-rotate-left"></i><span>Cam kết hoa tươi tối thiểu 3 - 5 ngày</span></div>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
-    // Auto-initialize on DOM ready
     document.addEventListener('DOMContentLoaded', function () {
-        updateHeaderBadge();
-        renderCartPage();
+        syncFromServer();
     });
 
     return {
-        getCart,
-        addToCart,
-        updateQuantity,
-        removeItem,
-        clearCart,
-        applyVoucher,
-        renderCartPage,
-        updateHeaderBadge
+        getCart: function () { return state.items; },
+        getTotals: function () { return state; },
+        addToCart: addToCart,
+        updateQuantity: updateQuantity,
+        removeItem: removeItem,
+        clearCart: clearCart,
+        addAddon: addAddon,
+        removeAddon: removeAddon,
+        applyVoucher: applyVoucher,
+        renderCartPage: renderCartPage,
+        updateHeaderBadge: updateHeaderBadge,
+        syncFromServer: syncFromServer
     };
 })();

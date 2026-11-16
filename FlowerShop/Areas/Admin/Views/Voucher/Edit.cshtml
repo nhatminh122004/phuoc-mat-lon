@@ -1,0 +1,95 @@
+@model FlowerShop.Models.Entities.Voucher
+@{
+    ViewBag.Title = "Sửa Mã Voucher - Admin";
+}
+
+<div style="max-width: 760px; margin-bottom: 24px;">
+    <a href="/Admin/Voucher" style="font-size: 0.85rem; color: var(--admin-primary); margin-bottom: 8px; display: inline-block;">
+        <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách voucher
+    </a>
+    <h1 class="font-serif" style="font-size: 1.8rem; margin: 0; color: var(--admin-dark);">
+        Sửa Voucher <span style="color: var(--admin-primary);">@Model.Code</span>
+    </h1>
+    <p style="color: var(--admin-text-muted); font-size: 0.92rem; margin-top: 4px;">
+        Đã dùng <strong>@Model.UsedCount</strong> / @Model.UsageLimit lượt.
+    </p>
+</div>
+
+<div class="admin-card-box" style="max-width: 760px;">
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 18px; border-radius: 10px; margin-bottom: 16px; font-size: 0.88rem;">
+            <i class="fa-solid fa-circle-exclamation"></i> <strong>Chưa lưu được:</strong> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @using (Html.BeginForm("Edit", "Voucher", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.Id)
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Mã Code (VIẾT HOA KHÔNG DẤU) *</label>
+                @Html.TextBoxFor(m => m.Code, new { required = "required", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none; text-transform: uppercase; font-weight: 700;" })
+                @Html.ValidationMessageFor(m => m.Code, "", new { style = "color:#b91c1c; font-size:0.8rem;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Giới hạn lượt dùng</label>
+                @Html.TextBoxFor(m => m.UsageLimit, new { type = "number", min = "1", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Mô tả khuyến mãi</label>
+            @Html.TextBoxFor(m => m.Description, new { placeholder = "Giảm 50k cho đơn từ 500k...", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Giảm theo % (1-100)</label>
+                @Html.TextBoxFor(m => m.DiscountPercent, new { type = "number", min = "1", max = "100", placeholder = "10", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+                @Html.ValidationMessageFor(m => m.DiscountPercent, "", new { style = "color:#b91c1c; font-size:0.8rem;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Hoặc Giảm số tiền cố định (đ)</label>
+                @Html.TextBoxFor(m => m.DiscountAmount, new { type = "number", placeholder = "50000", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Đơn tối thiểu áp dụng (đ)</label>
+                @Html.TextBoxFor(m => m.MinOrderValue, new { type = "number", min = "0", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Giảm tối đa (đ) nếu giảm theo %</label>
+                @Html.TextBoxFor(m => m.MaxDiscountAmount, new { type = "number", placeholder = "100000", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Ngày bắt đầu</label>
+                <input type="date" name="StartDate" value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Ngày kết thúc</label>
+                <input type="date" name="EndDate" value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+                @Html.ValidationMessageFor(m => m.EndDate, "", new { style = "color:#b91c1c; font-size:0.8rem;" })
+            </div>
+        </div>
+
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; margin-bottom: 24px; cursor: pointer;">
+            @Html.CheckBoxFor(m => m.IsActive)
+            <span>Đang hoạt động (khách có thể áp dụng mã này)</span>
+        </label>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 28px;">
+                <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi
+            </button>
+            <a href="/Admin/Voucher" class="btn btn-secondary" style="padding: 12px 24px;">Huỷ</a>
+        </div>
+    }
+</div>

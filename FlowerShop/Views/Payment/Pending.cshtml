@@ -1,0 +1,88 @@
+@{
+    ViewBag.Title = "Đang xác nhận thanh toán - Hữu Phước Florist";
+    string orderCode = ViewBag.OrderCode as string ?? "";
+}
+
+<div class="section" style="padding-top: 70px; max-width: 620px; text-align: center;">
+    <div style="background: #fff; border: 1px solid var(--border); border-radius: 24px; padding: 40px; box-shadow: var(--shadow-md);">
+        <div style="width: 70px; height: 70px; border-radius: 50%; background: #fffbeb; color: #92400e; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+            <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+
+        <h1 class="font-serif" style="font-size: 1.7rem; margin-bottom: 8px;">Đang xác nhận thanh toán</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.7;">
+            SePay đang gửi kết quả về hệ thống. Trang này sẽ tự cập nhật khi nhận được xác nhận thanh toán.
+        </p>
+
+        @if (!string.IsNullOrEmpty(orderCode))
+        {
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">
+                Mã đơn: <strong>@orderCode</strong>
+            </p>
+        }
+
+        <div id="pendingStatusBox" style="margin: 22px auto 0; max-width: 460px; padding: 14px 18px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; background: #fffbeb; color: #92400e; border: 1px solid #fcd34d;">
+            <i class="fa-solid fa-spinner fa-spin"></i> <span>Đang chờ xác nhận…</span>
+        </div>
+
+        <div style="margin-top: 22px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a id="pendingSuccessLink" href="@Url.Action("Success", "Payment", new { orderCode = orderCode })"
+               class="btn btn-primary" style="display: none;">
+                <i class="fa-solid fa-check"></i> Xem đơn hàng
+            </a>
+            <a href="/tra-cuu-don-hang?orderCode=@orderCode" class="btn btn-secondary">
+                Tra cứu đơn hàng
+            </a>
+        </div>
+
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 18px;">
+            Sau 10 phút chưa cập nhật, vui lòng gọi hotline <strong>0377 415 147</strong>.
+        </p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(orderCode))
+{
+    @section scripts {
+        <script>
+            (function () {
+                var orderCode = '@orderCode';
+                var box = document.getElementById('pendingStatusBox');
+                var link = document.getElementById('pendingSuccessLink');
+                var attempts = 0;
+                var maxAttempts = 75; // ~10 phút
+
+                function poll() {
+                    attempts++;
+
+                    fetch('/Payment/Status?orderCode=' + encodeURIComponent(orderCode), {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            if (data && data.success && data.isPaid) {
+                                box.style.background = '#ecfdf5';
+                                box.style.color = '#065f46';
+                                box.style.borderColor = '#a7f3d0';
+                                box.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Đã nhận thanh toán! Tiệm bắt đầu chuẩn bị hoa.</span>';
+                                if (link) link.style.display = 'inline-flex';
+                                return;
+                            }
+
+                            if (attempts >= maxAttempts) {
+                                box.innerHTML = '<i class="fa-solid fa-circle-info"></i> <span>Chưa nhận được xác nhận. Vui lòng gọi 0377 415 147 để được hỗ trợ.</span>';
+                                return;
+                            }
+
+                            setTimeout(poll, 8000);
+                        })
+                        .catch(function () {
+                            if (attempts < maxAttempts) setTimeout(poll, 12000);
+                        });
+                }
+
+                setTimeout(poll, 5000);
+            })();
+        </script>
+    }
+}

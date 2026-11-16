@@ -30,3 +30,8 @@ npm-debug.log*
 ## OS generated
 .DS_Store
 Thumbs.db
+
+# Runtime artifacts (không commit)
+FlowerShop/App_Data/emails/
+FlowerShop/App_Data/logs/
+FlowerShop/Uploads/

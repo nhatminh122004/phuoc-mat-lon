@@ -1,72 +1,120 @@
+@model FlowerShop.Models.ViewModels.SystemSettingsViewModel
 @{
     ViewBag.Title = "Cấu Hình Hệ Thống & Cổng Thanh Toán - Admin";
 }
 
 <div style="max-width: 900px; margin-bottom: 24px;">
     <h1 class="font-serif" style="font-size: 1.8rem; margin: 0; color: var(--admin-dark);">Cấu Hình Hệ Thống & Cổng Thanh Toán</h1>
-    <p style="color: var(--admin-text-muted); font-size: 0.95rem; margin-top: 4px;">Thiết lập các thông số kết nối VNPay, Stripe, VietQR và AI Florist Chatbot.</p>
+    <p style="color: var(--admin-text-muted); font-size: 0.95rem; margin-top: 4px;">
+        Thiết lập SePay (theo <a href="https://docs.sepay.vn" target="_blank" style="color: var(--admin-primary);">docs.sepay.vn</a>), email SMTP và AI Florist Chatbot.
+    </p>
 </div>
 
-<div style="display: flex; flex-direction: column; gap: 28px; max-width: 900px;">
-    <!-- VNPay Config Card -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div style="max-width: 900px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px; font-weight: 600;">
+        <i class="fa-solid fa-circle-check"></i> @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div style="max-width: 900px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px; font-weight: 600;">
+        <i class="fa-solid fa-circle-exclamation"></i> @TempData["ErrorMessage"]
+    </div>
+}
+
+<form action="/Admin/Settings/SaveSettings" method="post" style="display: flex; flex-direction: column; gap: 28px; max-width: 900px;">
+    @Html.AntiForgeryToken()
+
+    <!-- SePay Config Card -->
     <div class="admin-card-box">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
             <i class="fa-solid fa-qrcode" style="color: #005baa; font-size: 1.4rem;"></i>
-            <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">1. Cổng Thanh Toán VNPay</h3>
+            <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">1. Cổng Thanh Toán SePay</h3>
         </div>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
             <div>
-                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">vnp_TmnCode (Mã Website):</label>
-                <input type="text" value="DEMOSHOP" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Môi trường (Env):</label>
+                <select name="SePayEnv" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;">
+                    <option value="sandbox" @(Model.SePayEnv == "production" ? "" : "selected")>sandbox (pay-sandbox.sepay.vn)</option>
+                    <option value="production" @(Model.SePayEnv == "production" ? "selected" : "")>production (pay.sepay.vn)</option>
+                </select>
             </div>
             <div>
-                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">vnp_HashSecret (Chuỗi bí mật):</label>
-                <input type="password" value="SECRETKEY1234567890ABCDEF" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Chế độ hiển thị (Mode):</label>
+                <select name="SePayMode" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;">
+                    <option value="gateway" @(Model.SePayMode == "qr" ? "" : "selected")>gateway — chuyển sang trang thanh toán SePay (IPN)</option>
+                    <option value="qr" @(Model.SePayMode == "qr" ? "selected" : "")>qr — hiện QR trên site + webhook biến động số dư</option>
+                </select>
             </div>
         </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Merchant ID:</label>
+                <input type="text" name="SePayMerchantId" value="@Model.SePayMerchantId" placeholder="MERCHANT_123" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Secret Key đơn vị bán hàng (spsk_...):</label>
+                <input type="password" name="SePaySecretKey" value="@Model.SePaySecretKey" placeholder="spsk_test_..." class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">IPN Secret Key (header X-Secret-Key):</label>
+                <input type="password" name="SePayIpnSecretKey" value="@Model.SePayIpnSecretKey" placeholder="merchant tự đặt ở tab IPN" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Phương thức (để trống = khách tự chọn):</label>
+                <select name="SePayPaymentMethod" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;">
+                    <option value="BANK_TRANSFER" @(Model.SePayPaymentMethod == "BANK_TRANSFER" ? "selected" : "")>BANK_TRANSFER — QR chuyển khoản</option>
+                    <option value="NAPAS_BANK_TRANSFER" @(Model.SePayPaymentMethod == "NAPAS_BANK_TRANSFER" ? "selected" : "")>NAPAS_BANK_TRANSFER</option>
+                    <option value="CARD" @(Model.SePayPaymentMethod == "CARD" ? "selected" : "")>CARD — thẻ quốc tế</option>
+                    <option value="" @(string.IsNullOrEmpty(Model.SePayPaymentMethod) ? "selected" : "")>Để khách tự chọn trên trang SePay</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="border-top: 1px dashed var(--admin-border); margin: 18px 0; padding-top: 14px; font-size: 0.85rem; font-weight: 700; color: var(--admin-dark);">
+            Chế độ QR / Webhook (dùng khi Mode = qr)
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Ngân hàng:</label>
+                <input type="text" name="SePayBank" value="@Model.SePayBank" placeholder="MBBank" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Số tài khoản:</label>
+                <input type="text" name="SePayAccountNumber" value="@Model.SePayAccountNumber" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Chủ tài khoản:</label>
+                <input type="text" name="SePayAccountHolder" value="@Model.SePayAccountHolder" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Webhook HMAC Secret (ưu tiên):</label>
+                <input type="password" name="SePayWebhookHmacSecret" value="@Model.SePayWebhookHmacSecret" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Webhook API Key (Bearer):</label>
+                <input type="password" name="SePayWebhookApiKey" value="@Model.SePayWebhookApiKey" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+        </div>
+
         <div>
-            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">VNPay Payment URL:</label>
-            <input type="text" value="https://sandbox.vnpayment.vn/paymentv2/vpcpay.html" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Public Base URL (ngrok/domain — SePay cần URL công khai):</label>
+            <input type="text" name="SePayPublicBaseUrl" value="@Model.SePayPublicBaseUrl" placeholder="https://abc123.ngrok-free.app" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
         </div>
-    </div>
 
-    <!-- Stripe Config Card -->
-    <div class="admin-card-box">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-            <i class="fa-brands fa-stripe" style="color: #635bff; font-size: 2rem;"></i>
-            <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">2. Cổng Thanh Toán Thẻ Quốc Tế Stripe</h3>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <div>
-                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Publishable Key (pk_test_...):</label>
-                <input type="text" value="pk_test_TYoo61E7ZXqStWST8qjekqqQ" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
-            </div>
-            <div>
-                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Secret Key (sk_test_...):</label>
-                <input type="password" value="sk_test_your_stripe_secret_key_here" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
-            </div>
-        </div>
-    </div>
-
-    <!-- VietQR Config Card -->
-    <div class="admin-card-box">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-            <i class="fa-solid fa-building-columns" style="color: #005030; font-size: 1.4rem;"></i>
-            <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">3. Cổng Chuyển Khoản Tự Động VietQR</h3>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 16px;">
-            <div>
-                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Mã ngân hàng (Bank ID):</label>
-                <input type="text" value="MB" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
-            </div>
-            <div>
-                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Số tài khoản nhận tiền:</label>
-                <input type="text" value="0909123456888" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
-            </div>
-            <div>
-                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Tên chủ tài khoản:</label>
-                <input type="text" value="TIEM HOA FLOWER BOUTIQUE" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
-            </div>
+        <div style="font-size: 0.82rem; color: #888; margin-top: 12px;">
+            * IPN URL khai báo trên SePay: <code>/Payment/Ipn</code> · Webhook biến động số dư: <code>/Payment/Webhook</code>.
+            Cả hai endpoint phải truy cập được từ Internet (dùng ngrok khi chạy local).
         </div>
     </div>
 
@@ -74,26 +122,62 @@
     <div class="admin-card-box">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
             <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--admin-primary); font-size: 1.4rem;"></i>
-            <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">4. Cấu Hình Trợ Lý Ảo Florist AI</h3>
+            <h3 class="font-serif" style="font-size: 1.25rem; margin: 0;">2. Cấu Hình Trợ Lý Ảo Florist AI</h3>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 14px;">
             <div>
                 <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Tên đại diện Florist:</label>
-                <input type="text" value="Hương Lan" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+                <input type="text" name="ChatbotFloristName" value="@Model.ChatbotFloristName" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
             </div>
             <div>
                 <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Gemini / OpenAI API Key (Tùy chọn):</label>
-                <input type="password" placeholder="AIzaSy..." class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+                <input type="password" name="ChatbotGeminiApiKey" value="@Model.ChatbotGeminiApiKey" placeholder="AIzaSy..." class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
             </div>
         </div>
         <div style="font-size: 0.82rem; color: #888;">
-            * Nếu để trống API Key, chatbot sẽ kích hoạt bộ máy khuyến nghị thông minh có sẵn phân tích dịp tặng, ngân sách và tra cứu đơn hàng trực tiếp từ cơ sở dữ liệu.
+            * Để trống API Key, chatbot dùng bộ máy khuyến nghị có sẵn (phân tích dịp tặng, ngân sách, tra cứu đơn trực tiếp từ CSDL).
+        </div>
+    </div>
+
+    <!-- Email / SMTP Card -->
+    <div class="admin-card-box">
+        <h3 style="font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 0 0 16px; color: var(--admin-dark);">
+            <i class="fa-solid fa-envelope" style="color: var(--primary);"></i> Email / SMTP (gửi mail xác nhận đơn & đặt lại mật khẩu)
+        </h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">SMTP Host (để trống = ghi mail ra App_Data/emails):</label>
+                <input type="text" name="SmtpHost" value="@Model.SmtpHost" placeholder="localhost" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">SMTP Port:</label>
+                <input type="text" name="SmtpPort" value="@Model.SmtpPort" placeholder="1025" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">SMTP User:</label>
+                <input type="text" name="SmtpUser" value="@Model.SmtpUser" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">SMTP Password:</label>
+                <input type="password" name="SmtpPassword" value="@Model.SmtpPassword" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Email gửi (From):</label>
+                <input type="text" name="SmtpFrom" value="@Model.SmtpFrom" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Tên người gửi:</label>
+                <input type="text" name="SmtpFromName" value="@Model.SmtpFromName" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" />
+            </div>
+        </div>
+        <div style="font-size: 0.82rem; color: #888; margin-top: 12px;">
+            * Chưa có SMTP: hệ thống ghi mail vào <code>App_Data/emails</code> để bạn kiểm tra nội dung mà không cần mail server.
         </div>
     </div>
 
     <div>
-        <button type="button" onclick="Swal.fire('Thành công', 'Đã lưu cấu hình tham số hệ thống!', 'success')" class="btn btn-primary" style="padding: 14px 32px;">
+        <button type="submit" class="btn btn-primary" style="padding: 14px 32px;">
             <i class="fa-solid fa-floppy-disk"></i> Lưu Tất Cả Cấu Hình
         </button>
     </div>
-</div>
+</form>

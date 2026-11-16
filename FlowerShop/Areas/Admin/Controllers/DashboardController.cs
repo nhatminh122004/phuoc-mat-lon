@@ -1,11 +1,13 @@
 using System;
 using System.Linq;
 using System.Web.Mvc;
+using FlowerShop.Areas.Admin.Filters;
 using FlowerShop.DAL;
 using FlowerShop.Models.ViewModels;
 
 namespace FlowerShop.Areas.Admin.Controllers
 {
+    [AdminAuthorize]
     public class DashboardController : Controller
     {
         private readonly FlowerShopDbContext _db = new FlowerShopDbContext();

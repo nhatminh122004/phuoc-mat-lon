@@ -1,6 +1,7 @@
-@model FlowerShop.Models.ViewModels.OrderTrackingViewModel
+﻿@model FlowerShop.Models.ViewModels.OrderTrackingViewModel
 @{
     ViewBag.Title = "Tra Cứu Vận Đơn Hoa & Xem Ảnh Thực Tế - Hữu Phước Florist";
+    var myOrders = ViewBag.MyOrders as List<FlowerShop.Models.Entities.Order> ?? new List<FlowerShop.Models.Entities.Order>();
 }
 
 <div class="section" style="padding-top: 40px; max-width: 900px;">
@@ -12,13 +13,13 @@
     </div>
 
     <!-- Search Box -->
-    <div style="background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 30px; box-shadow: var(--shadow-sm); margin-bottom: 40px;">
+    <div style="background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 30px; box-shadow: var(--shadow-sm); margin-bottom: 32px;">
         <form action="/tra-cuu-don-hang" method="get" style="display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 14px; align-items: center;">
             <div>
                 <input type="text" name="orderCode" value="@Model.OrderCode" placeholder="Mã đơn hàng (VD: FL202609088831)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-family: inherit; font-size: 0.92rem; text-transform: uppercase;" />
             </div>
             <div>
-                <input type="text" name="phone" value="@Model.PhoneNumber" placeholder="Số điện thoại đặt hoa" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-family: inherit; font-size: 0.92rem;" />
+                <input type="text" name="phone" value="@Model.PhoneNumber" placeholder="Số điện thoại đặt hoa (bắt buộc)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-family: inherit; font-size: 0.92rem;" />
             </div>
             <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
                 <i class="fa-solid fa-magnifying-glass"></i> Tra Cứu
@@ -36,7 +37,7 @@
     @if (Model.Order != null)
     {
         var order = Model.Order;
-        
+
         <!-- 1. Trạng Thái Vận Trình (5-Step Timeline) -->
         <div style="background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 36px; box-shadow: var(--shadow-md); margin-bottom: 36px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 18px; margin-bottom: 30px;">
@@ -52,25 +53,24 @@
 
             <!-- Steps Visualization -->
             @{
-                string[] stepKeys = new[] { "Pending", "Confirmed", "Arranging", "Shipping", "Delivered" };
                 string[] stepLabels = new[] { "Đã Tiếp Nhận", "Đã Xác Nhận", "Đang Cắm Hoa", "Đang Đi Giao", "Đã Giao Thành Công" };
                 int currentStepIdx = 1;
-                if (order.OrderStatus == "Confirmed") currentStepIdx = 2;
-                if (order.OrderStatus == "Arranging" || order.OrderStatus == "ProofReady") currentStepIdx = 3;
-                if (order.OrderStatus == "Shipping") currentStepIdx = 4;
-                if (order.OrderStatus == "Delivered") currentStepIdx = 5;
+                if (order.OrderStatus == "Confirmed") { currentStepIdx = 2; }
+                if (order.OrderStatus == "Arranging" || order.OrderStatus == "ProofReady") { currentStepIdx = 3; }
+                if (order.OrderStatus == "Shipping") { currentStepIdx = 4; }
+                if (order.OrderStatus == "Delivered") { currentStepIdx = 5; }
             }
 
             <div style="display: flex; justify-content: space-between; position: relative; margin-bottom: 40px;">
                 <!-- Background connecting bar -->
                 <div style="position: absolute; top: 20px; left: 40px; right: 40px; height: 4px; background: #eee; z-index: 1;"></div>
-                
+
                 @for (int i = 0; i < 5; i++)
                 {
                     bool isPassed = (i + 1) <= currentStepIdx;
                     bool isCurrent = (i + 1) == currentStepIdx;
                     <div style="position: relative; z-index: 2; text-align: center; flex: 1;">
-                        <div style="width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; @(isPassed ? "background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(200,75,97,0.3);" : "background: #fff; border: 2px solid #ddd; color: #aaa;")">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; @(isPassed ? "background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(2,132,199,0.3);" : "background: #fff; border: 2px solid #ddd; color: #aaa;")">
                             @if (isPassed && !isCurrent)
                             {
                                 <i class="fa-solid fa-check"></i>
@@ -87,26 +87,55 @@
                 }
             </div>
 
-            <!-- 2. Ảnh Chụp Thực Tế Bó Hoa Sau Khi Cắm -->
+            <!-- 2. Ảnh Chụp Thực Tế Bó Hoa Sau Khi Cắm (Multi-Photo Gallery) -->
             @if (!string.IsNullOrEmpty(order.ProofPhotoUrl))
             {
-                <div style="background: var(--bg-body); border-radius: 16px; padding: 24px; border: 2px dashed #ffd2da; margin-bottom: 30px;">
+                var proofPhotos = order.ProofPhotoUrl
+                    .Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(u => u.Trim())
+                    .Where(u => !string.IsNullOrEmpty(u))
+                    .ToList();
+
+                <div style="background: var(--bg-body); border-radius: 16px; padding: 24px; border: 2px dashed var(--primary); margin-bottom: 30px;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
                         <i class="fa-solid fa-camera" style="color: var(--primary); font-size: 1.4rem;"></i>
                         <div>
-                            <h3 class="font-serif" style="font-size: 1.2rem; margin: 0;">Ảnh Hoa Chụp Thực Tế Trước Khi Giao</h3>
-                            <div style="font-size: 0.8rem; color: #888;">Được chụp trực tiếp bởi nghệ nhân cắm hoa tại xưởng</div>
+                            <h3 class="font-serif" style="font-size: 1.2rem; margin: 0;">Ảnh Hoa Chụp Thực Tế Trước Khi Giao (@proofPhotos.Count ảnh)</h3>
+                            <div style="font-size: 0.8rem; color: #888;">Được chụp trực tiếp nhiều góc độ bởi nghệ nhân cắm hoa tại xưởng (Bấm vào ảnh để phóng to)</div>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-                        <img src="@order.ProofPhotoUrl" alt="Ảnh hoa thực tế" style="width: 240px; height: 240px; border-radius: 14px; object-fit: cover; border: 4px solid #fff; box-shadow: var(--shadow-sm);" />
+                    <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            @foreach (var photoUrl in proofPhotos)
+                            {
+                                <img src="@photoUrl" alt="Ảnh hoa thực tế" onclick="Swal.fire({ imageUrl: '@photoUrl', imageAlt: 'Ảnh hoa thực tế', showConfirmButton: false, showCloseButton: true, width: 'auto' })" style="width: 180px; height: 180px; border-radius: 14px; object-fit: cover; border: 4px solid #fff; box-shadow: var(--shadow-sm); cursor: zoom-in;" />
+                            }
+                        </div>
                         <div style="flex: 1; min-width: 240px;">
-                            <div style="background: #fff; padding: 16px; border-radius: 12px; font-size: 0.9rem; line-height: 1.6; margin-bottom: 14px;">
-                                <i class="fa-solid fa-circle-check" style="color: #2e7d32;"></i> Tác phẩm hoa của bạn đã được hoàn thiện đúng mẫu thiết kế và chuẩn bị được chuyển qua bộ phận giao vận chuyên nghiệp.
+                            <div id="proofStatusNotice" style="background: #fff; padding: 16px; border-radius: 12px; font-size: 0.9rem; line-height: 1.6; margin-bottom: 14px;">
+                                @if (order.OrderStatus == "Shipping" || order.OrderStatus == "Delivered")
+                                {
+                                    <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>
+                                    <span><strong>Đã duyệt ảnh thành phẩm!</strong> Bó hoa của bạn đã được bàn giao cho bộ phận vận chuyển.</span>
+                                }
+                                else
+                                {
+                                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i>
+                                    <span>Tác phẩm hoa của bạn đã được hoàn thiện. Quý khách vui lòng kiểm tra ảnh thực tế và xác nhận duyệt để Shipper xuất phát giao hoa!</span>
+                                }
                             </div>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="Swal.fire('Cảm ơn bạn!', 'Chúng tôi đã ghi nhận sự hài lòng của bạn. Shipper sẽ lập tức xuất phát!', 'success')">
-                                <i class="fa-solid fa-thumbs-up"></i> Tôi Hài Lòng, Cho Giao Ngay
-                            </button>
+
+                            @if (order.OrderStatus != "Shipping" && order.OrderStatus != "Delivered" && order.OrderStatus != "Cancelled")
+                            {
+                                <div id="proofActionButtons" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                    <button type="button" id="btnApproveProof" class="btn btn-primary btn-sm" onclick="approveProofPhoto('@order.OrderCode')">
+                                        <i class="fa-solid fa-thumbs-up"></i> Tôi Hài Lòng, Cho Giao Ngay
+                                    </button>
+                                    <button type="button" id="btnRequestRevision" class="btn btn-outline btn-sm" onclick="requestProofRevision('@order.OrderCode')">
+                                        <i class="fa-solid fa-pen-to-square"></i> Yêu Cầu Chỉnh Sửa Lại
+                                    </button>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -119,6 +148,12 @@
                     <div><strong>Họ tên:</strong> @order.RecipientName</div>
                     <div><strong>Địa chỉ:</strong> @order.RecipientAddress, @order.District, @order.City</div>
                     <div><strong>Phương thức:</strong> @order.PaymentMethod (@order.PaymentStatus)</div>
+                    @if (!string.IsNullOrEmpty(order.OrderNotes))
+                    {
+                        <div style="margin-top: 8px; padding: 8px 12px; background: #f8fafc; border-radius: 8px; font-size: 0.82rem; color: #475569;">
+                            <strong>Ghi chú đơn:</strong> @order.OrderNotes
+                        </div>
+                    }
                 </div>
                 <div>
                     <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--dark);">Sản Phẩm Trong Đơn:</h4>
@@ -144,4 +179,142 @@
             </div>
         </div>
     }
+
+    @if (myOrders.Any())
+    {
+        <div style="background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 28px; box-shadow: var(--shadow-sm);">
+            <h3 class="font-serif" style="font-size: 1.35rem; margin-bottom: 16px; color: var(--dark);">
+                <i class="fa-solid fa-receipt" style="color: var(--primary); margin-right: 8px;"></i> Lịch Sử Đơn Hàng Của Bạn
+            </h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border); text-align: left; color: var(--text-muted);">
+                            <th style="padding: 10px 8px;">Mã Đơn</th>
+                            <th style="padding: 10px 8px;">Người Nhận</th>
+                            <th style="padding: 10px 8px;">Ngày Giao</th>
+                            <th style="padding: 10px 8px;">Tổng Tiền</th>
+                            <th style="padding: 10px 8px;">Trạng Thái</th>
+                            <th style="padding: 10px 8px; text-align: right;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in myOrders)
+                        {
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 12px 8px; font-weight: 700; color: var(--primary);">#@item.OrderCode</td>
+                                <td style="padding: 12px 8px;">@item.RecipientName</td>
+                                <td style="padding: 12px 8px;">@item.DeliveryDate.ToString("dd/MM/yyyy")</td>
+                                <td style="padding: 12px 8px; font-weight: 600;">@item.TotalAmount.ToString("N0") đ</td>
+                                <td style="padding: 12px 8px;"><span class="badge-tag badge-featured">@item.OrderStatus</span></td>
+                                <td style="padding: 12px 8px; text-align: right;">
+                                    <a href="/tra-cuu-don-hang?orderCode=@item.OrderCode" class="btn btn-outline btn-sm" style="padding: 5px 12px; font-size: 0.8rem;">
+                                        Xem Chi Tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
 </div>
+
+@section scripts {
+    <script src="~/Scripts/js/csrf.js"></script>
+    <script>
+        // Số điện thoại khách đã nhập trên form tra cứu (bắt buộc khi không phải chủ đơn).
+        function trackingPhone() {
+            const input = document.querySelector('input[name="phone"]');
+            return input ? input.value.trim() : '';
+        }
+
+        function approveProofPhoto(orderCode) {
+            const btn = document.getElementById('btnApproveProof');
+            if (btn) btn.disabled = true;
+
+            const params = new URLSearchParams();
+            params.append('orderCode', orderCode);
+            params.append('phone', trackingPhone());
+
+            fetch('/OrderTracking/ApproveProof', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: (window.BloomCsrf ? window.BloomCsrf.withToken(params) : params).toString()
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đã Duyệt Ảnh Thành Công!',
+                        text: data.message,
+                        confirmButtonColor: '#0284C7'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    if (btn) btn.disabled = false;
+                    Swal.fire('Thông báo', data.message || 'Không thể cập nhật trạng thái.', 'error');
+                }
+            })
+            .catch(() => {
+                if (btn) btn.disabled = false;
+                Swal.fire('Lỗi kết nối', 'Vui lòng thử lại sau giây lát.', 'error');
+            });
+        }
+
+        function requestProofRevision(orderCode) {
+            Swal.fire({
+                title: 'Yêu Cầu Chỉnh Sửa Bó Hoa',
+                input: 'textarea',
+                inputLabel: 'Nhập chi tiết điểm bạn muốn nghệ nhân điều chỉnh (màu giấy gói, nơ, độ nở của hoa...):',
+                inputPlaceholder: 'Ví dụ: Nhờ shop thắt thêm nơ lụa trắng và thêm cành lá khuynh diệp...',
+                showCancelButton: true,
+                confirmButtonText: 'Gửi Yêu Cầu Sửa',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#0284C7',
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'Vui lòng nhập nội dung bạn muốn chỉnh sửa!';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    const params = new URLSearchParams();
+                    params.append('orderCode', orderCode);
+                    params.append('phone', trackingPhone());
+                    params.append('feedback', result.value);
+
+                    fetch('/OrderTracking/RequestRevision', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: (window.BloomCsrf ? window.BloomCsrf.withToken(params) : params).toString()
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đã Gửi Yêu Cầu!',
+                                text: data.message,
+                                confirmButtonColor: '#0284C7'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire('Lỗi', data.message || 'Không thể gửi yêu cầu.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

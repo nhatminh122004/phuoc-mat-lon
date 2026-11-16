@@ -89,10 +89,18 @@ document.addEventListener('DOMContentLoaded', function () {
         chatBody.appendChild(typingIndicator);
         chatBody.scrollTop = chatBody.scrollHeight;
 
+        // Gửi form-urlencoded + token CSRF (MVC model binding không đọc application/json,
+        // và action yêu cầu ValidateAntiForgeryToken).
+        const chatParams = new URLSearchParams();
+        chatParams.append('Message', message);
+
         fetch('/Chatbot/SendMessage', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message })
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: (window.BloomCsrf ? window.BloomCsrf.withToken(chatParams) : chatParams).toString()
         })
         .then(res => res.json())
         .then(data => {

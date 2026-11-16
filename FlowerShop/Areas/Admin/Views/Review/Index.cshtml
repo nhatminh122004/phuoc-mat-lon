@@ -1,0 +1,118 @@
+@model List<FlowerShop.Models.Entities.Review>
+@{
+    ViewBag.Title = "Duyệt Đánh Giá";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    string status = ViewBag.Status ?? "pending";
+    int page = ViewBag.Page ?? 1;
+}
+
+<h2 style="font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--admin-dark); margin-bottom: 6px;">
+    <i class="fa-solid fa-star" style="color: #f59e0b;"></i> Duyệt Đánh Giá Khách Hàng
+</h2>
+<p style="color: var(--admin-muted); font-size: 0.9rem; margin-bottom: 20px;">
+    Đánh giá mới cần được duyệt trước khi hiển thị trên trang sản phẩm.
+</p>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 18px; border-radius: 10px; margin-bottom: 18px; font-weight: 600;">
+        <i class="fa-solid fa-circle-check"></i> @TempData["SuccessMessage"]
+    </div>
+}
+
+<div style="display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;">
+    <a href="@Url.Action("Index", new { status = "pending" })"
+       class="btn btn-sm @(status == "pending" ? "btn-primary" : "btn-secondary")">
+        Chờ duyệt (@ViewBag.PendingCount)
+    </a>
+    <a href="@Url.Action("Index", new { status = "approved" })"
+       class="btn btn-sm @(status == "approved" ? "btn-primary" : "btn-secondary")">
+        Đã duyệt (@ViewBag.ApprovedCount)
+    </a>
+    <a href="@Url.Action("Index", new { status = "all" })"
+       class="btn btn-sm @(status == "all" ? "btn-primary" : "btn-secondary")">
+        Tất cả (@ViewBag.Total)
+    </a>
+</div>
+
+<div class="admin-card">
+    @if (!Model.Any())
+    {
+        <p style="text-align: center; color: var(--admin-muted); padding: 40px 0;">
+            <i class="fa-regular fa-face-smile" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+            Không có đánh giá nào trong mục này.
+        </p>
+    }
+    else
+    {
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">ID</th>
+                    <th>Sản phẩm</th>
+                    <th>Khách hàng</th>
+                    <th style="width: 110px;">Số sao</th>
+                    <th>Nội dung</th>
+                    <th style="width: 130px;">Ngày gửi</th>
+                    <th style="width: 190px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var review in Model)
+                {
+                    <tr>
+                        <td>#@review.Id</td>
+                        <td>
+                            @(review.Product != null ? review.Product.Name : "(đã xoá)")
+                        </td>
+                        <td>@review.CustomerName</td>
+                        <td>
+                            @for (int i = 0; i < review.Rating; i++)
+                            {
+                                <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 0.8rem;"></i>
+                            }
+                        </td>
+                        <td style="max-width: 320px;">@review.Comment</td>
+                        <td>@review.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @if (!review.IsApproved)
+                            {
+                                using (Html.BeginForm("Approve", "Review", FormMethod.Post, new { style = "display:inline;" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@review.Id" />
+                                    <input type="hidden" name="returnStatus" value="@status" />
+                                    <input type="hidden" name="page" value="@page" />
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fa-solid fa-check"></i> Duyệt
+                                    </button>
+                                }
+                            }
+                            @using (Html.BeginForm("Reject", "Review", FormMethod.Post, new { style = "display:inline;", onsubmit = "return confirm('Xoá đánh giá này?');" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@review.Id" />
+                                <input type="hidden" name="returnStatus" value="@status" />
+                                <input type="hidden" name="page" value="@page" />
+                                <button type="submit" class="btn btn-secondary btn-sm">
+                                    <i class="fa-solid fa-trash"></i> Xoá
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@if ((int)ViewBag.TotalPages > 1)
+{
+    <div style="display: flex; gap: 6px; justify-content: center; margin-top: 18px;">
+        @for (int p = 1; p <= (int)ViewBag.TotalPages; p++)
+        {
+            <a href="@Url.Action("Index", new { status = status, page = p })"
+               class="btn btn-sm @(p == page ? "btn-primary" : "btn-secondary")">@p</a>
+        }
+    </div>
+}

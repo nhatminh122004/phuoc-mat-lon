@@ -10,7 +10,10 @@
         <p class="section-desc">Hãy tự tay lựa chọn dáng cắm, loài hoa chủ đạo, số lượng cành và màu giấy gói để tạo nên món quà mang đậm dấu ấn cá nhân của bạn.</p>
     </div>
 
-    <form action="/CustomBouquet/AddToCart" method="post" id="customBouquetForm">
+    <form action="/CustomBouquet/AddToCart" method="post" id="customBouquetForm"
+          data-wrap-costs="@Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.WrapCosts)"
+          data-stem-unit-price="@ViewBag.DefaultStemUnitPrice">
+        @Html.AntiForgeryToken()
         <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px; align-items: start;">
             <!-- Left: 3-Step Wizard Options -->
             <div style="display: flex; flex-direction: column; gap: 32px;">
@@ -69,7 +72,9 @@
                         {
                             var f = Model.MainFlowers[i];
                             <label style="cursor: pointer;">
-                                <input type="radio" name="mainFlowerId" value="@f.Id" @(i == 0 ? "checked" : "") style="display: none;" />
+                                <input type="radio" name="mainFlowerId" value="@f.Id"
+                                       data-unit-price="@FlowerShop.Services.Orders.BouquetBuilderService.ResolveStemUnitPrice(f.SalePrice ?? f.Price)"
+                                       @(i == 0 ? "checked" : "") style="display: none;" />
                                 <div class="flower-choice-card" style="border: 2px solid @(i == 0 ? "var(--primary)" : "var(--border)"); border-radius: 12px; padding: 10px; text-align: center; background: #fff;">
                                     <img src="@f.MainImageUrl" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin: 0 auto 8px;" />
                                     <div style="font-size: 0.82rem; font-weight: 600; line-height: 1.2;">@f.Name</div>
@@ -147,7 +152,19 @@
 
                 <div style="background: var(--bg-body); padding: 18px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
                     <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Ước Tính Tổng Tiền:</div>
-                    <div id="customBouquetPrice" style="font-size: 2rem; font-weight: 700; color: var(--primary);">555.000 đ</div>
+                    <div id="customBouquetPrice" style="font-size: 2rem; font-weight: 700; color: var(--primary);">
+                        @{
+                            var firstFlower = Model.MainFlowers.FirstOrDefault();
+                            var initialUnitPrice = FlowerShop.Services.Orders.BouquetBuilderService.ResolveStemUnitPrice(
+                                firstFlower == null ? 0m : (firstFlower.SalePrice ?? firstFlower.Price));
+                            var initialTotal = FlowerShop.Services.Orders.BouquetBuilderService.CalculatePrice(
+                                FlowerShop.Services.Orders.BouquetBuilderService.WrapBoTron, 19, initialUnitPrice);
+                        }
+                        @initialTotal.ToString("N0") đ
+                    </div>
+                    <div id="customBouquetUnitPrice" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;">
+                        Giá được tiệm tính lại chính xác khi thêm vào giỏ.
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;">

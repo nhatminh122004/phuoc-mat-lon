@@ -1,20 +1,58 @@
+@model FlowerShop.Models.ViewModels.ShoppingCart
 @{
     ViewBag.Title = "Giỏ Hàng - Hữu Phước Florist";
+    var addons = ViewBag.AvailableAddons as List<FlowerShop.Models.Entities.AddonItem> ?? new List<FlowerShop.Models.Entities.AddonItem>();
 }
 
 <div class="section" style="padding-top: 40px; padding-bottom: 80px;">
     <div class="cart-page-header">
         <span class="section-tag">Mua Sắm Trực Tuyến</span>
         <h1 class="font-serif" style="font-size: 2.3rem; margin-bottom: 8px;">Giỏ Hoa Của Bạn</h1>
-        <p style="color: var(--text-muted); font-size: 0.98rem;">Xem lại danh sách hoa tươi nghệ thuật đã chọn trước khi tiến hành thanh toán & chọn giờ giao.</p>
+        <p style="color: var(--text-muted); font-size: 0.98rem;">Xem lại danh sách hoa tươi nghệ thuật & quà tặng kèm đã chọn trước khi tiến hành thanh toán & chọn giờ giao.</p>
     </div>
 
-    <!-- Dynamic Cart Container powered by BloomCart client-side state -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+            <i class="fa-solid fa-circle-check"></i> @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+            <i class="fa-solid fa-circle-exclamation"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- Dynamic Cart Container synchronized with Server Session & BloomCart -->
     <div id="cartPageContainer">
-        <!-- Rendered dynamically by BloomCart in cart.js with local persistence -->
+        <!-- Rendered dynamically by BloomCart in cart.js -->
     </div>
-</div>
 
-@section Scripts {
-    <script src="~/Scripts/js/cart.js"></script>
-}
+    @if (addons.Any())
+    {
+        <div style="margin-top: 48px; background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 28px; box-shadow: var(--shadow-sm);">
+            <h3 class="font-serif" style="font-size: 1.4rem; margin-bottom: 6px; color: var(--dark);">
+                <i class="fa-solid fa-gift" style="color: var(--primary); margin-right: 8px;"></i> Gợi Ý Quà Tặng Kèm Ý Nghĩa
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Thêm gấu bông, sô-cô-la hoặc nến thơm để món quà hoa tươi thêm phần trọn vẹn.</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+                @foreach (var addon in addons)
+                {
+                    <div style="border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: #fcfdfe;">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <img src="@addon.ImageUrl" alt="@addon.Name" style="width: 56px; height: 56px; border-radius: 10px; object-fit: cover;" />
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 0.88rem; color: var(--dark); line-height: 1.3;">@addon.Name</div>
+                                <div style="color: var(--primary); font-weight: 700; font-size: 0.85rem; margin-top: 4px;">+@addon.Price.ToString("N0") đ</div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="BloomCart.addAddon(@addon.Id)" class="btn btn-outline btn-sm" style="width: 100%; padding: 8px;">
+                            <i class="fa-solid fa-plus"></i> Thêm Quà Tặng Này
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

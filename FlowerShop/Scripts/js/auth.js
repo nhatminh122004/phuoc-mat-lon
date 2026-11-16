@@ -1,42 +1,73 @@
 /**
- * HỮU PHƯỚC FLORIST - CLIENT-SIDE AUTHENTICATION & USER STATE
- * Simulates Login, Register, Forgot Password flows, Form validation,
- * Loading/Error/Success states, and Header user profile synchronization.
+ * HỮU PHƯỚC FLORIST - FULL-STACK AUTHENTICATION & USER STATE
+ * Synchronizes authentication with ASP.NET MVC AccountController (MySQL + Session/Cookie)
+ * and updates Header user profile UI.
  */
 
 const BloomAuth = (function () {
-    const USER_KEY = 'bloom_grace_user';
+    // Không dùng localStorage: trạng thái đăng nhập lấy từ server (/Account/CurrentUser)
+    // để tránh trường hợp UI hiển thị user "giả" trong khi session đã hết hạn.
+    let currentUser = null;
 
     function getUser() {
-        try {
-            const raw = localStorage.getItem(USER_KEY);
-            return raw ? JSON.parse(raw) : null;
-        } catch (e) {
-            return null;
-        }
+        return currentUser;
     }
 
     function setUser(user) {
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        currentUser = user || null;
         updateHeaderUser();
     }
 
+    function syncFromServer() {
+        fetch('/Account/CurrentUser', {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Non-JSON');
+            return res.json();
+        })
+        .then(data => {
+            if (data && data.authenticated && data.user) {
+                setUser(data.user);
+            } else if (data && data.authenticated === false) {
+                setUser(null);
+            }
+        })
+        .catch(() => {
+            updateHeaderUser();
+        });
+    }
+
     function logout() {
-        localStorage.removeItem(USER_KEY);
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: 'Đã đăng xuất tài khoản!',
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
-                window.location.reload();
-            });
-        } else {
-            window.location.reload();
-        }
+        const body = window.BloomCsrf
+            ? window.BloomCsrf.withToken(new URLSearchParams())
+            : new URLSearchParams();
+
+        fetch('/Account/LogoutAjax', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            body: body.toString()
+        })
+        .catch(() => {})
+        .finally(() => {
+            currentUser = null;
+            updateHeaderUser();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Đã đăng xuất tài khoản!',
+                    showConfirmButton: false,
+                    timer: 1400
+                }).then(() => {
+                    window.location.href = '/';
+                });
+            } else {
+                window.location.href = '/';
+            }
+        });
     }
 
     function updateHeaderUser() {
@@ -49,7 +80,7 @@ const BloomAuth = (function () {
         if (user) {
             guestElements.forEach(el => el.style.display = 'none');
             userElements.forEach(el => el.style.display = 'block');
-            userNameElements.forEach(el => el.textContent = user.name || 'Quý Khách');
+            userNameElements.forEach(el => el.textContent = user.name || user.username || 'Quý Khách');
             userEmailElements.forEach(el => el.textContent = user.email || '');
         } else {
             guestElements.forEach(el => el.style.display = 'block');
@@ -57,7 +88,6 @@ const BloomAuth = (function () {
         }
     }
 
-    // Toggle password visibility
     function togglePassword(inputId, btn) {
         const input = document.getElementById(inputId);
         if (!input) return;
@@ -97,78 +127,97 @@ const BloomAuth = (function () {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
-    // Handle Login Form Submit
     function handleLogin(e) {
         e.preventDefault();
         hideAlert('loginAlert');
 
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
+        const emailInput = document.getElementById('loginEmail');
+        const passwordInput = document.getElementById('loginPassword');
+        const rememberMeInput = document.getElementById('rememberMe');
+        const returnUrlInput = document.getElementById('loginReturnUrl');
         const submitBtn = document.getElementById('loginSubmitBtn');
 
+        const email = emailInput ? emailInput.value.trim() : '';
+        const password = passwordInput ? passwordInput.value : '';
+        const rememberMe = rememberMeInput ? rememberMeInput.checked : true;
+        const returnUrl = returnUrlInput && returnUrlInput.value
+            ? returnUrlInput.value
+            : (new URLSearchParams(window.location.search).get('returnUrl') || '');
+
         if (!email) {
-            showAlert('loginAlert', 'Vui lòng nhập địa chỉ email của bạn.');
-            document.getElementById('loginEmail').focus();
-            return;
-        }
-        if (!isValidEmail(email)) {
-            showAlert('loginAlert', 'Địa chỉ email không đúng định dạng (VD: example@domain.com).');
-            document.getElementById('loginEmail').focus();
+            showAlert('loginAlert', 'Vui lòng nhập Email hoặc Tên đăng nhập của bạn.');
+            if (emailInput) emailInput.focus();
             return;
         }
         if (!password) {
             showAlert('loginAlert', 'Vui lòng nhập mật khẩu.');
-            document.getElementById('loginPassword').focus();
-            return;
-        }
-        if (password.length < 6) {
-            showAlert('loginAlert', 'Mật khẩu phải chứa ít nhất 6 ký tự.');
-            document.getElementById('loginPassword').focus();
+            if (passwordInput) passwordInput.focus();
             return;
         }
 
-        // Simulate Loading State
         submitBtn.disabled = true;
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = `<span class="spinner-btn"></span> Đang xác thực...`;
 
-        setTimeout(() => {
+        const body = new URLSearchParams({
+            email: email,
+            password: password,
+            rememberMe: rememberMe ? 'true' : 'false',
+            returnUrl: returnUrl
+        });
+
+        fetch('/Account/Login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: (window.BloomCsrf ? window.BloomCsrf.withToken(body) : body).toString()
+        })
+        .then(res => res.json())
+        .then(data => {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
 
-            const name = email.split('@')[0];
-            const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
-            setUser({
-                name: capitalizedName,
-                email: email
-            });
+            if (!data.success) {
+                showAlert('loginAlert', data.message || 'Đăng nhập không thành công.');
+                return;
+            }
 
+            setUser(data.user);
             showAlert('loginAlert', 'Đăng nhập thành công! Đang chuyển hướng...', true);
 
+            const targetUrl = data.redirectUrl || returnUrl || '/';
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'success',
                     title: 'Chào mừng trở lại!',
-                    text: `Xin chào ${capitalizedName}, chúc bạn một ngày ngập tràn niềm vui!`,
+                    text: `Xin chào ${data.user.name}, chúc bạn một ngày ngập tràn niềm vui!`,
                     showConfirmButton: false,
-                    timer: 1600
+                    timer: 1400
                 }).then(() => {
-                    const redirectUrl = new URLSearchParams(window.location.search).get('returnUrl') || '/';
-                    window.location.href = redirectUrl;
+                    window.location.href = targetUrl;
                 });
             } else {
-                setTimeout(() => { window.location.href = '/'; }, 1200);
+                setTimeout(() => { window.location.href = targetUrl; }, 1000);
             }
-        }, 700);
+        })
+        .catch(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            showAlert('loginAlert', 'Không thể kết nối máy chủ xác thực. Vui lòng thử lại.');
+        });
     }
 
-    // Handle Register Form Submit
     function handleRegister(e) {
         e.preventDefault();
         hideAlert('registerAlert');
 
         const fullName = document.getElementById('regFullName').value.trim();
         const email = document.getElementById('regEmail').value.trim();
+        const phoneEl = document.getElementById('regPhone');
+        const phone = phoneEl ? phoneEl.value.trim() : '';
         const password = document.getElementById('regPassword').value;
         const confirmPassword = document.getElementById('regConfirmPassword').value;
         const agreeTerms = document.getElementById('regAgreeTerms').checked;
@@ -179,13 +228,8 @@ const BloomAuth = (function () {
             document.getElementById('regFullName').focus();
             return;
         }
-        if (!email) {
-            showAlert('registerAlert', 'Vui lòng nhập địa chỉ email.');
-            document.getElementById('regEmail').focus();
-            return;
-        }
-        if (!isValidEmail(email)) {
-            showAlert('registerAlert', 'Địa chỉ email không hợp lệ.');
+        if (!email || !isValidEmail(email)) {
+            showAlert('registerAlert', 'Vui lòng nhập địa chỉ email hợp lệ.');
             document.getElementById('regEmail').focus();
             return;
         }
@@ -195,7 +239,7 @@ const BloomAuth = (function () {
             return;
         }
         if (password !== confirmPassword) {
-            showAlert('registerAlert', 'Mật khẩu xác nhận không trùng khớp. Vui lòng kiểm tra lại.');
+            showAlert('registerAlert', 'Mật khẩu xác nhận không trùng khớp.');
             document.getElementById('regConfirmPassword').focus();
             return;
         }
@@ -204,39 +248,61 @@ const BloomAuth = (function () {
             return;
         }
 
-        // Loading
         submitBtn.disabled = true;
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = `<span class="spinner-btn"></span> Đang tạo tài khoản...`;
 
-        setTimeout(() => {
+        const body = new URLSearchParams({
+            fullName: fullName,
+            email: email,
+            phone: phone,
+            password: password,
+            confirmPassword: confirmPassword
+        });
+
+        fetch('/Account/Register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: (window.BloomCsrf ? window.BloomCsrf.withToken(body) : body).toString()
+        })
+        .then(res => res.json())
+        .then(data => {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
 
-            setUser({
-                name: fullName,
-                email: email
-            });
+            if (!data.success) {
+                showAlert('registerAlert', data.message || 'Đăng ký không thành công.');
+                return;
+            }
 
+            setUser(data.user);
             showAlert('registerAlert', 'Đăng ký thành công! Đang chuyển hướng...', true);
 
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'success',
                     title: 'Tạo tài khoản thành công!',
-                    text: `Chúc mừng ${fullName}! Bạn đã nhận được mã ưu đãi BLOOM10 giảm 10% cho đơn hàng đầu tiên.`,
+                    text: `Chúc mừng ${data.user.name}! Bạn đã nhận được mã ưu đãi BLOOM10 giảm 10% cho đơn hàng đầu tiên.`,
                     confirmButtonText: 'Bắt Đầu Mua Sắm',
                     confirmButtonColor: '#0284C7'
                 }).then(() => {
-                    window.location.href = '/';
+                    window.location.href = data.redirectUrl || '/';
                 });
             } else {
-                setTimeout(() => { window.location.href = '/'; }, 1400);
+                setTimeout(() => { window.location.href = '/'; }, 1200);
             }
-        }, 800);
+        })
+        .catch(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            showAlert('registerAlert', 'Có lỗi kết nối máy chủ khi tạo tài khoản.');
+        });
     }
 
-    // Handle Forgot Password Form Submit
     function handleForgotPassword(e) {
         e.preventDefault();
         hideAlert('forgotAlert');
@@ -244,44 +310,57 @@ const BloomAuth = (function () {
         const email = document.getElementById('forgotEmail').value.trim();
         const submitBtn = document.getElementById('forgotSubmitBtn');
 
-        if (!email) {
-            showAlert('forgotAlert', 'Vui lòng nhập địa chỉ email liên kết với tài khoản.');
+        if (!email || !isValidEmail(email)) {
+            showAlert('forgotAlert', 'Vui lòng nhập địa chỉ email hợp lệ đã đăng ký.');
             document.getElementById('forgotEmail').focus();
             return;
         }
-        if (!isValidEmail(email)) {
-            showAlert('forgotAlert', 'Định dạng email không hợp lệ (VD: user@example.com).');
-            document.getElementById('forgotEmail').focus();
-            return;
-        }
-
-        // Loading
         submitBtn.disabled = true;
         const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = `<span class="spinner-btn"></span> Đang gửi hướng dẫn...`;
+        submitBtn.innerHTML = `<span class="spinner-btn"></span> Đang xử lý...`;
 
-        setTimeout(() => {
+        const body = new URLSearchParams({ email: email });
+
+        fetch('/Account/ForgotPassword', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: (window.BloomCsrf ? window.BloomCsrf.withToken(body) : body).toString()
+        })
+        .then(res => res.json())
+        .then(data => {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
 
-            showAlert('forgotAlert', `Chúng tôi đã gửi hướng dẫn đặt lại mật khẩu đến ${email}. Vui lòng kiểm tra hộp thư đến hoặc thư rác!`, true);
+            if (!data.success) {
+                showAlert('forgotAlert', data.message || 'Không tìm thấy email này.');
+                return;
+            }
 
+            showAlert('forgotAlert', data.message, true);
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Đã gửi liên kết khôi phục!',
-                    text: `Hướng dẫn đổi mật khẩu đã được gửi đến email ${email}. Vui lòng kiểm tra hòm thư của bạn.`,
-                    confirmButtonText: 'Quay Lại Đăng Nhập',
+                    title: 'Đã gửi email!',
+                    text: data.message,
+                    confirmButtonText: 'Đã hiểu',
                     confirmButtonColor: '#0284C7'
-                }).then(() => {
-                    window.location.href = '/Account/Login';
                 });
             }
-        }, 750);
+        })
+        .catch(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            showAlert('forgotAlert', 'Không thể kết nối máy chủ. Vui lòng thử lại.');
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () {
         updateHeaderUser();
+        syncFromServer();
 
         // Mobile drawer toggle
         const mobileToggleBtn = document.getElementById('mobileNavToggle');

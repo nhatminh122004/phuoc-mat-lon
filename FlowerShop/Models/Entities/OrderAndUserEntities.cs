@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -65,8 +65,8 @@ namespace FlowerShop.Models.Entities
         [StringLength(500)]
         public string OrderNotes { get; set; }
 
-        // Bằng chứng cắm hoa thực tế gửi khách duyệt
-        [StringLength(350)]
+        // Bằng chứng cắm hoa thực tế gửi khách duyệt (Hỗ trợ lưu nhiều URL ảnh phân cách bởi dấu ;)
+        [StringLength(2000)]
         public string ProofPhotoUrl { get; set; }
 
         // Tài chính
@@ -86,7 +86,7 @@ namespace FlowerShop.Models.Entities
         // Phương thức & Trạng thái thanh toán
         [Required]
         [StringLength(50)]
-        public string PaymentMethod { get; set; } = "COD"; // COD, VNPAY, STRIPE, VIETQR
+        public string PaymentMethod { get; set; } = "COD"; // COD, SEPAY
 
         [Required]
         [StringLength(50)]
@@ -173,7 +173,7 @@ namespace FlowerShop.Models.Entities
 
         [Required]
         [StringLength(50)]
-        public string Gateway { get; set; } // VNPAY, STRIPE, VIETQR
+        public string Gateway { get; set; } // SEPAY
 
         [StringLength(100)]
         public string TransactionNo { get; set; }
@@ -212,7 +212,7 @@ namespace FlowerShop.Models.Entities
         [StringLength(1000)]
         public string Comment { get; set; }
 
-        [StringLength(350)]
+        [StringLength(2000)]
         public string ImageUrl { get; set; }
 
         public bool IsApproved { get; set; } = true;

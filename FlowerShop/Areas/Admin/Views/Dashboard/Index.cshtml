@@ -1,4 +1,4 @@
-@model FlowerShop.Models.ViewModels.AdminDashboardViewModel
+﻿@model FlowerShop.Models.ViewModels.AdminDashboardViewModel
 @{
     ViewBag.Title = "Bảng Điều Khiển Kinh Doanh - Admin Hữu Phước Florist";
 }
@@ -107,10 +107,10 @@
                             <td>
                                 @{
                                     string pillClass = "pill-pending";
-                                    if (order.OrderStatus == "Confirmed") pillClass = "pill-confirmed";
-                                    if (order.OrderStatus == "Arranging") pillClass = "pill-arranging";
-                                    if (order.OrderStatus == "Shipping") pillClass = "pill-shipping";
-                                    if (order.OrderStatus == "Delivered") pillClass = "pill-delivered";
+                                    if (order.OrderStatus == "Confirmed") { pillClass = "pill-confirmed"; }
+                                    if (order.OrderStatus == "Arranging") { pillClass = "pill-arranging"; }
+                                    if (order.OrderStatus == "Shipping") { pillClass = "pill-shipping"; }
+                                    if (order.OrderStatus == "Delivered") { pillClass = "pill-delivered"; }
                                 }
                                 <span class="status-pill @pillClass">@order.OrderStatus</span>
                             </td>

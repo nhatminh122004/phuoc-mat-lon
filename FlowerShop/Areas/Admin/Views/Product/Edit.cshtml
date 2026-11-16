@@ -1,4 +1,4 @@
-@model FlowerShop.Models.Entities.Product
+﻿@model FlowerShop.Models.Entities.Product
 @{
     ViewBag.Title = "Chỉnh Sửa Mẫu Hoa #" + Model.Id + " - Admin";
 }
@@ -11,7 +11,7 @@
 </div>
 
 <div class="admin-card-box" style="max-width: 900px;">
-    @using (Html.BeginForm("Edit", "Product", FormMethod.Post))
+    @using (Html.BeginForm("Edit", "Product", FormMethod.Post, new { enctype = "multipart/form-data" }))
     {
         @Html.AntiForgeryToken()
         @Html.HiddenFor(m => m.Id)
@@ -31,15 +31,15 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div>
                 <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Danh mục dáng cắm *</label>
-                @Html.DropDownList("CategoryId", null, new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+                @Html.DropDownList("CategoryId", (SelectList)ViewBag.Categories, new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
             </div>
             <div>
                 <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Chủ đề dịp tặng</label>
-                @Html.DropDownList("OccasionId", null, "-- Chọn dịp --", new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+                @Html.DropDownList("OccasionId", (SelectList)ViewBag.Occasions, "-- Chọn dịp --", new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
             </div>
             <div>
                 <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Loài hoa chính</label>
-                @Html.DropDownList("FlowerTypeId", null, "-- Chọn loài hoa --", new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+                @Html.DropDownList("FlowerTypeId", (SelectList)ViewBag.FlowerTypes, "-- Chọn loài hoa --", new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
             </div>
         </div>
 
@@ -62,10 +62,54 @@
             </div>
         </div>
 
-        <div style="margin-bottom: 16px;">
-            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Link ảnh đại diện chính (URL) *</label>
-            @Html.TextBoxFor(m => m.MainImageUrl, new { required = "required", style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none;" })
+        <div style="margin-bottom: 16px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px dashed var(--admin-border);">
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">
+                    <i class="fa-solid fa-images" style="color: var(--admin-primary);"></i> Tải Thêm Nhiều Ảnh Sản Phẩm (Multi-files):
+                </label>
+                <input type="file" name="imageFiles" multiple accept="image/*" onchange="previewEditProductImgs(this)" style="width: 100%; font-size: 0.85rem; margin-bottom: 8px;" />
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #475569; cursor: pointer;">
+                    <input type="checkbox" name="setFirstAsMain" value="true" />
+                    <span>Đặt ảnh tải lên đầu tiên làm Ảnh đại diện chính mới</span>
+                </label>
+                <div id="editMultiPreviewBox" style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;"></div>
+            </div>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Hoặc chỉnh sửa Link ảnh đại diện (URL):</label>
+                @Html.TextBoxFor(m => m.MainImageUrl, new { style = "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none; margin-bottom: 10px;" })
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+                    {
+                        <img src="@Model.MainImageUrl" title="Ảnh đại diện chính" style="width: 68px; height: 68px; border-radius: 8px; object-fit: cover; border: 2px solid var(--admin-primary);" />
+                    }
+                    @if (Model.Images != null)
+                    {
+                        foreach (var gImg in Model.Images)
+                        {
+                            <img src="@gImg.ImageUrl" title="Ảnh bộ sưu tập" style="width: 68px; height: 68px; border-radius: 8px; object-fit: cover; border: 1px solid var(--admin-border);" />
+                        }
+                    }
+                </div>
+            </div>
         </div>
+        <script>
+            function previewEditProductImgs(input) {
+                var box = document.getElementById('editMultiPreviewBox');
+                box.innerHTML = '';
+                if (input.files && input.files.length > 0) {
+                    Array.from(input.files).forEach(function (file) {
+                        var r = new FileReader();
+                        r.onload = function (e) {
+                            var img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.style.cssText = 'width: 68px; height: 68px; border-radius: 8px; object-fit: cover; border: 2px solid var(--admin-primary);';
+                            box.appendChild(img);
+                        };
+                        r.readAsDataURL(file);
+                    });
+                }
+            }
+        </script>
 
         <div style="margin-bottom: 16px;">
             <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Mô tả ngắn</label>

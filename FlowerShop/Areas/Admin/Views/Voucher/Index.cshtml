@@ -1,4 +1,4 @@
-@model List<FlowerShop.Models.Entities.Voucher>
+﻿@model List<FlowerShop.Models.Entities.Voucher>
 @{
     ViewBag.Title = "Quản Lý Mã Ưu Đãi Voucher - Admin";
 }
@@ -14,6 +14,19 @@
 </div>
 
 <div class="admin-card-box">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 18px; border-radius: 10px; margin-bottom: 16px; font-size: 0.88rem;">
+            <i class="fa-solid fa-circle-check"></i> @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div style="background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; padding: 12px 18px; border-radius: 10px; margin-bottom: 16px; font-size: 0.88rem;">
+            <i class="fa-solid fa-circle-exclamation"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
     <div class="table-responsive">
         <table class="admin-table">
             <thead>
@@ -25,33 +38,71 @@
                     <th>Hạn Dùng</th>
                     <th>Đã Dùng / Giới Hạn</th>
                     <th>Trạng Thái</th>
+                    <th style="text-align: right;">Thao Tác</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var v in Model)
+                @if (!Model.Any())
                 {
                     <tr>
-                        <td><strong style="color: var(--admin-primary); font-size: 1rem;">@v.Code</strong></td>
-                        <td>@v.Description</td>
-                        <td>
-                            @if (v.DiscountPercent.HasValue)
-                            {
-                                <span style="font-weight: 700; color: #2e7d32;">@v.DiscountPercent% (tối đa @((v.MaxDiscountAmount ?? 0).ToString("N0")) đ)</span>
-                            }
-                            else
-                            {
-                                <span style="font-weight: 700; color: #2e7d32;">@((v.DiscountAmount ?? 0).ToString("N0")) đ</span>
-                            }
-                        </td>
-                        <td>@v.MinOrderValue.ToString("N0") đ</td>
-                        <td>@(v.EndDate.HasValue ? v.EndDate.Value.ToString("dd/MM/yyyy") : "Vô thời hạn")</td>
-                        <td>@v.UsedCount / @v.UsageLimit</td>
-                        <td>
-                            <span class="status-pill @(v.IsActive ? "pill-delivered" : "pill-cancelled")">
-                                @(v.IsActive ? "Hoạt Động" : "Tạm Dừng")
-                            </span>
+                        <td colspan="8" style="text-align: center; color: #888; padding: 40px;">
+                            Chưa có voucher nào. Bấm <strong>Tạo Mã Voucher Mới</strong> để bắt đầu.
                         </td>
                     </tr>
+                }
+                else
+                {
+                    foreach (var v in Model)
+                    {
+                        <tr>
+                            <td><strong style="color: var(--admin-primary); font-size: 1rem;">@v.Code</strong></td>
+                            <td class="cell-wrap" style="max-width: 260px; white-space: normal;">@v.Description</td>
+                            <td>
+                                @if (v.DiscountPercent.HasValue)
+                                {
+                                    <span style="font-weight: 700; color: #2e7d32;">@v.DiscountPercent% (tối đa @((v.MaxDiscountAmount ?? 0).ToString("N0")) đ)</span>
+                                }
+                                else
+                                {
+                                    <span style="font-weight: 700; color: #2e7d32;">@((v.DiscountAmount ?? 0).ToString("N0")) đ</span>
+                                }
+                            </td>
+                            <td class="amount-cell">@v.MinOrderValue.ToString("N0") đ</td>
+                            <td>@(v.EndDate.HasValue ? v.EndDate.Value.ToString("dd/MM/yyyy") : "Vô thời hạn")</td>
+                            <td class="amount-cell">@v.UsedCount / @v.UsageLimit</td>
+                            <td>
+                                <span class="status-pill @(v.IsActive ? "pill-delivered" : "pill-cancelled")">
+                                    @(v.IsActive ? "Hoạt Động" : "Tạm Dừng")
+                                </span>
+                            </td>
+                            <td class="actions-cell">
+                                <div class="row-actions">
+                                    <a href="/Admin/Voucher/Edit/@v.Id" class="btn btn-secondary btn-sm" title="Sửa voucher">
+                                        <i class="fa-solid fa-pen"></i> Sửa
+                                    </a>
+
+                                    @using (Html.BeginForm("ToggleActive", "Voucher", FormMethod.Post, new { style = "margin:0;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@v.Id" />
+                                        <button type="submit" class="btn btn-secondary btn-sm" title="@(v.IsActive ? "Tạm dừng voucher" : "Bật lại voucher")">
+                                            <i class="fa-solid @(v.IsActive ? "fa-pause" : "fa-play")"></i>
+                                            @(v.IsActive ? "Tắt" : "Bật")
+                                        </button>
+                                    }
+
+                                    @using (Html.BeginForm("Delete", "Voucher", FormMethod.Post, new { style = "margin:0;", onsubmit = "return confirm('Xoá voucher " + v.Code + "? Nếu voucher đã được dùng trong đơn hàng, hệ thống sẽ chỉ tạm dừng.');" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@v.Id" />
+                                        <button type="submit" class="btn btn-sm" style="background:#fee2e2; border:1px solid #fecaca; color:#b91c1c;" title="Xoá voucher">
+                                            <i class="fa-regular fa-trash-can"></i> Xoá
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>

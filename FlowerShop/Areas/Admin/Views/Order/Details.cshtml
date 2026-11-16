@@ -17,6 +17,19 @@
     </div>
 </div>
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+        <i class="fa-solid fa-circle-check"></i> @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+        <i class="fa-solid fa-circle-exclamation"></i> @TempData["ErrorMessage"]
+    </div>
+}
+
 <div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 32px; align-items: start;">
     <!-- Left: Order Details & Products -->
     <div style="display: flex; flex-direction: column; gap: 24px;">
@@ -94,7 +107,8 @@
         <div class="admin-card-box">
             <h3 class="font-serif" style="font-size: 1.2rem; margin-bottom: 16px;">Cập Nhật Tiến Độ & Ảnh Thực Tế</h3>
             
-            <form action="/Admin/Order/UpdateStatus" method="post">
+            <form action="/Admin/Order/UpdateStatus" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.Id" />
 
                 <div style="margin-bottom: 14px;">
@@ -119,16 +133,39 @@
                     </select>
                 </div>
 
-                <div style="margin-bottom: 18px;">
-                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">URL Ảnh Hoa Cắm Thực Tế (Gửi khách duyệt):</label>
-                    <input type="text" name="proofPhotoUrl" value="@Model.ProofPhotoUrl" placeholder="https://..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none; font-size: 0.85rem;" />
-                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Dán link ảnh chụp bó hoa thực tế của thợ để khách xem được trên trang tra cứu đơn.</div>
+                <div style="margin-bottom: 14px; background: #f8fafc; padding: 14px; border-radius: 10px; border: 1px dashed var(--admin-border);">
+                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">
+                        <i class="fa-solid fa-images" style="color: var(--admin-primary);"></i> Tải Nhiều Ảnh Hoa Thực Tế (Multi-files):
+                    </label>
+                    <input type="file" name="proofPhotoFiles" multiple accept="image/*" onchange="previewProofFiles(this)" style="width: 100%; font-size: 0.82rem; margin-bottom: 8px;" />
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #475569; cursor: pointer;">
+                        <input type="checkbox" name="appendPhotos" value="true" checked />
+                        <span>Giữ lại ảnh cũ và nối thêm ảnh mới tải lên</span>
+                    </label>
+                    <div id="proofMultiPreview" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;"></div>
                 </div>
 
-                @if (!string.IsNullOrEmpty(Model.ProofPhotoUrl))
+                <div style="margin-bottom: 18px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Hoặc dán các URL Ảnh (Ngăn cách bằng dấu ; hoặc ,):</label>
+                    <input type="text" name="proofPhotoUrl" value="@Model.ProofPhotoUrl" placeholder="https://anh1.jpg;https://anh2.jpg" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--admin-border); outline: none; font-size: 0.85rem;" />
+                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Khách hàng sẽ xem toàn bộ bộ sưu tập ảnh thực tế này trên trang Tra cứu vận đơn.</div>
+                </div>
+
+                @{
+                    var existingProofs = !string.IsNullOrWhiteSpace(Model.ProofPhotoUrl)
+                        ? Model.ProofPhotoUrl.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        : new string[0];
+                }
+                @if (existingProofs.Any())
                 {
-                    <div style="margin-bottom: 18px; text-align: center;">
-                        <img src="@Model.ProofPhotoUrl" alt="Proof" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; border: 1px solid var(--admin-border);" />
+                    <div style="margin-bottom: 18px;">
+                        <div style="font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Ảnh thực tế hiện tại (@existingProofs.Length ảnh):</div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 8px;">
+                            @foreach (var pUrl in existingProofs)
+                            {
+                                <img src="@pUrl.Trim()" alt="Proof" style="width: 100%; height: 95px; object-fit: cover; border-radius: 8px; border: 1px solid var(--admin-border);" />
+                            }
+                        </div>
                     </div>
                 }
 
@@ -136,6 +173,25 @@
                     <i class="fa-solid fa-floppy-disk"></i> Lưu Cập Nhật Đơn
                 </button>
             </form>
+
+            <script>
+                function previewProofFiles(input) {
+                    var container = document.getElementById('proofMultiPreview');
+                    container.innerHTML = '';
+                    if (input.files && input.files.length > 0) {
+                        Array.from(input.files).forEach(function (file) {
+                            var reader = new FileReader();
+                            reader.onload = function (e) {
+                                var img = document.createElement('img');
+                                img.src = e.target.result;
+                                img.style.cssText = 'width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 2px solid var(--admin-primary);';
+                                container.appendChild(img);
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    }
+                }
+            </script>
         </div>
     </div>
 </div>

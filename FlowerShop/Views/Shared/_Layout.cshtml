@@ -1,5 +1,29 @@
-@using FlowerShop.Services.Cart
+﻿@using FlowerShop.Services.Cart
 @{
+    // Precompute để tránh biểu thức phức tạp trong attribute (Razor parser không xử lý ?. + ["key"] trong @(...))
+    string currentController = ViewContext.RouteData.Values["controller"] as string ?? string.Empty;
+    string currentAction = ViewContext.RouteData.Values["action"] as string ?? string.Empty;
+    string navHome = (currentController == "Home" && currentAction == "Index") ? "active" : "";
+    string navProduct = currentController == "Product" ? "active" : "";
+    string navBouquet = currentController == "CustomBouquet" ? "active" : "";
+    string navTracking = currentController == "OrderTracking" ? "active" : "";
+
+    // Tránh lặp thương hiệu: nhiều view đã set ViewBag.Title kèm "Hữu Phước Florist"
+    string pageTitle = ViewBag.Title as string;
+    string fullTitle = string.IsNullOrWhiteSpace(pageTitle)
+        ? "Hữu Phước Florist - Tiệm Hoa Tươi Nghệ Thuật"
+        : (pageTitle.IndexOf("Hữu Phước", StringComparison.OrdinalIgnoreCase) >= 0
+            ? pageTitle
+            : pageTitle + " - Hữu Phước Florist");
+    // Cache-busting: tự thêm ?v=<ticks sửa file> để trình duyệt lấy CSS/JS mới sau mỗi lần deploy.
+    Func<string, string> AssetUrl = vp =>
+    {
+        string physical = Server.MapPath(vp);
+        long ticks = System.IO.File.Exists(physical)
+            ? System.IO.File.GetLastWriteTimeUtc(physical).Ticks
+            : 0;
+        return Url.Content(vp) + "?v=" + ticks;
+    };
     var cart = CartService.GetCart(new HttpContextWrapper(HttpContext.Current));
     var cartCount = cart.Items.Sum(i => i.Quantity);
 }
@@ -8,7 +32,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewBag.Title - Hữu Phước Florist</title>
+    <title>@fullTitle</title>
     
     <!-- Google Fonts & FontAwesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,8 +41,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <!-- Core Stylesheets -->
-    <link rel="stylesheet" href="~/Content/css/style.css" />
-    <link rel="stylesheet" href="~/Content/css/chatbot.css" />
+    <link rel="stylesheet" href="@AssetUrl("~/Content/css/style.css")" />
+    <link rel="stylesheet" href="@AssetUrl("~/Content/css/chatbot.css")" />
     
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -56,10 +80,10 @@
 
             <!-- Navigation Links -->
             <ul class="nav-menu">
-                <li><a href="/" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">Trang Chủ</a></li>
-                <li><a href="/Product" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">Bộ Sưu Tập Hoa</a></li>
-                <li><a href="/tu-thiet-ke-bo-hoa" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "CustomBouquet" ? "active" : "")"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary); margin-right: 4px;"></i>Tự Cắm Hoa</a></li>
-                <li><a href="/tra-cuu-don-hang" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "OrderTracking" ? "active" : "")">Tra Cứu Đơn</a></li>
+                <li><a href="/" class="@navHome">Trang Chủ</a></li>
+                <li><a href="/Product" class="@navProduct">Bộ Sưu Tập Hoa</a></li>
+                <li><a href="/tu-thiet-ke-bo-hoa" class="@navBouquet"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary); margin-right: 4px;"></i>Tự Cắm Hoa</a></li>
+                <li><a href="/tra-cuu-don-hang" class="@navTracking">Tra Cứu Đơn</a></li>
                 <li><a href="/Home/About">Về Chúng Tôi</a></li>
             </ul>
 
@@ -71,21 +95,30 @@
                         <i class="fa-regular fa-user"></i>
                     </button>
                     <div class="account-dropdown-menu">
+                        @{
+                            bool isServerLogged = Session["UserId"] != null;
+                            string serverUserName = Session["FullName"] as string ?? Session["Username"] as string ?? "Khách Hàng";
+                            string serverUserEmail = Session["UserEmail"] as string ?? "";
+                        }
                         <!-- Guest State -->
-                        <div class="js-auth-guest">
+                        <div class="js-auth-guest" style="@(isServerLogged ? "display: none;" : "display: block;")">
                             <a href="/Account/Login"><i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng Nhập</a>
                             <a href="/Account/Register"><i class="fa-solid fa-user-plus"></i> Đăng Ký Tài Khoản</a>
                             <div class="account-dropdown-divider"></div>
                             <a href="/Account/ForgotPassword"><i class="fa-solid fa-key"></i> Quên Mật Khẩu?</a>
                         </div>
                         <!-- Logged-in State -->
-                        <div class="js-auth-logged" style="display: none;">
+                        <div class="js-auth-logged" style="@(isServerLogged ? "display: block;" : "display: none;")">
                             <div class="account-user-info">
-                                <div class="account-user-name js-auth-username">Khách Hàng</div>
-                                <div class="account-user-email js-auth-useremail">user@domain.com</div>
+                                <div class="account-user-name js-auth-username">@serverUserName</div>
+                                <div class="account-user-email js-auth-useremail">@serverUserEmail</div>
                             </div>
                             <a href="/tra-cuu-don-hang"><i class="fa-solid fa-receipt"></i> Đơn Hàng Của Tôi</a>
                             <a href="/Cart"><i class="fa-solid fa-basket-shopping"></i> Giỏ Hàng Hiện Tại</a>
+                            @if (string.Equals(Session["UserRole"] as string, "Admin", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <a href="/Admin/Dashboard"><i class="fa-solid fa-gauge-high"></i> Trang Quản Trị</a>
+                            }
                             <div class="account-dropdown-divider"></div>
                             <a href="javascript:void(0)" onclick="BloomAuth.logout()" style="color: #EF4444;"><i class="fa-solid fa-arrow-right-from-bracket" style="color: #EF4444;"></i> Đăng Xuất</a>
                         </div>
@@ -99,7 +132,7 @@
                 </a>
 
                 <!-- Admin Button -->
-                <a href="/Admin/Dashboard" class="btn btn-secondary btn-sm" style="margin-left: 4px;" title="Khu vực quản trị">
+                <a href="/Admin/Dashboard" class="btn btn-secondary btn-sm header-admin-btn" style="margin-left: 4px;" title="Khu vực quản trị">
                     <i class="fa-solid fa-lock" style="font-size: 0.8rem;"></i> Admin
                 </a>
             </div>
@@ -136,7 +169,10 @@
 
     <!-- 3. Page Body -->
     <main>
-        @RenderBody()
+        @* Token CSRF dùng chung cho mọi AJAX POST (giỏ hàng, đăng nhập, chatbot, tra cứu đơn) *@
+    <div id="csrfTokenHost" style="display: none;">@Html.AntiForgeryToken()</div>
+
+    @RenderBody()
     </main>
 
     <!-- 4. Off-Canvas Mini Cart Drawer -->
@@ -207,9 +243,8 @@
                 
                 <h5 style="color: #fff; margin-top: 18px; margin-bottom: 10px; font-size: 0.9rem;">Thanh Toán An Toàn & Bảo Mật</h5>
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <span style="background: #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #005baa;">VNPAY</span>
-                    <span style="background: #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #635bff;">STRIPE</span>
-                    <span style="background: #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #005030;">VIETQR</span>
+                    <span style="background: #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #005baa;">SePay</span>
+                    <span style="background: #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #005030;">COD</span>
                     <span style="background: #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; color: #1a1f71;">VISA</span>
                 </div>
             </div>
@@ -222,10 +257,11 @@
     </footer>
 
     <!-- Client Scripts -->
-    <script src="~/Scripts/js/cart.js"></script>
-    <script src="~/Scripts/js/auth.js"></script>
-    <script src="~/Scripts/js/main.js"></script>
-    <script src="~/Scripts/js/chatbot.js"></script>
+    <script src="@AssetUrl("~/Scripts/js/csrf.js")"></script>
+    <script src="@AssetUrl("~/Scripts/js/cart.js")"></script>
+    <script src="@AssetUrl("~/Scripts/js/auth.js")"></script>
+    <script src="@AssetUrl("~/Scripts/js/main.js")"></script>
+    <script src="@AssetUrl("~/Scripts/js/chatbot.js")"></script>
     @RenderSection("scripts", required: false)
 </body>
 </html>

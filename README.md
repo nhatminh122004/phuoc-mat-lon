@@ -1,91 +1,154 @@
-# 🌸 Hữu Phước Florist - Website Bán Hoa Tươi Nghệ Thuật & Quà Tặng Sang Trọng
-### Nền tảng: ASP.NET MVC 5 + C# + Entity Framework 6 + MySQL + VNPay + Stripe + AI Chatbot
+﻿# 🌸 Hữu Phước Florist — Website Bán Hoa Tươi Nghệ Thuật
+
+### ASP.NET MVC 5 (.NET Framework 4.8) + Entity Framework 6 + MySQL (Laragon) + **SePay**
 
 ---
 
-## 🌟 Giới Thiệu Dự Án
-**Hữu Phước Florist** là hệ thống website thương mại điện tử chuyên biệt cho ngành hoa tươi nghệ thuật và quà tặng cao cấp. Được thiết kế theo phong cách thẩm mỹ *Modern Minimalist Floral Boutique* (Sky Blue - xanh da trời sang trọng), kết hợp đầy đủ các quy trình nghiệp vụ đặc thù của tiệm hoa hiện đại:
-- **Tách biệt người gửi & người nhận**: Hỗ trợ chế độ tặng ẩn danh bí mật (*Secret Admirer*).
-- **Giao hoa hỏa tốc**: Lựa chọn ngày và khung giờ nhận hoa chính xác (khung 60-120 phút).
-- **Duyệt ảnh thực tế trước khi giao**: Thợ cắm hoa chụp ảnh bó hoa hoàn thiện gửi khách duyệt trước khi shipper giao.
-- **Tự cắm hoa theo ý thích (Interactive Bouquet Builder)**: Khách tự chọn phong cách cắm, loài hoa, số lượng cành (9, 19, 33, 99 cành) và giấy gói.
-- **Đa cổng thanh toán**: Tích hợp thanh toán nội địa qua **VNPay Sandbox** (QR, ATM), quốc tế qua **Stripe Elements** (3D Secure), quét mã **VietQR** động và thanh toán tiền mặt (COD).
-- **AI Florist Chatbot**: Trợ lý ảo tư vấn chọn mẫu hoa theo ngân sách/dịp tặng, tự động sáng tác lời chúc thiệp ý nghĩa và tra cứu vận đơn trực tiếp.
+## 1. Trạng thái hiện tại (cập nhật 16/11/2026)
+
+| Hạng mục | Trạng thái |
+|---|---|
+| Build (`MSBuild FlowerShop.sln`) | ✅ 0 warning / 0 error |
+| Razor precompile (`aspnet_compiler`) | ✅ 0 error — toàn bộ view đã compile |
+| Unit test (`dotnet test`) | ✅ **226 test pass** |
+| Cổng thanh toán | **SePay** (QR chuyển khoản / ATM-NAPAS / thẻ quốc tế) + **COD** |
+| Seed dữ liệu | 24 sản phẩm, 48 ảnh, 5 addon, 4 thiệp, 3 voucher, 3 tài khoản, 2 đơn demo, 12 đánh giá |
+| Chỉ mục DB | **43 index** cho tải truy vấn lớn (xem `Docs/PERFORMANCE.md`) |
+
+> **Đã gỡ bỏ:** VNPay, Stripe, VietQR, PayOS và server Node mock (`server.js`). Cổng online duy nhất: **SePay**.
 
 ---
 
-## 🛠️ Ngăn Xếp Công Nghệ (Tech Stack)
-- **Framework**: ASP.NET MVC 5 (.NET Framework 4.8 / C#)
-- **ORM**: Entity Framework 6 (Code-First & Database Initializer)
-- **Cơ sở dữ liệu**: MySQL Server 5.7 / 8.0+
-- **Cổng thanh toán**:
-  - **VNPay** Gateway v2.1.0 (HMAC-SHA512 checksum & IPN webhook)
-  - **Stripe** .NET SDK (Stripe Elements & PaymentIntent)
-  - **VietQR** API (NAPAS 24/7 tự điền số tiền & nội dung đơn)
-- **AI Chatbot**: Gemini API / Intelligent Floral Recommendation Engine
-- **Giao diện**: HTML5, Modern CSS (Glassmorphism, CSS Variables), Vanilla JS, FontAwesome 6, SweetAlert2
+## 2. Ngăn xếp công nghệ
+
+- **Framework**: ASP.NET MVC 5 (.NET Framework 4.8 / C# 7.3)
+- **ORM**: Entity Framework 6.4.4 (Code-First + initializer idempotent)
+- **CSDL**: MySQL 5.7 / 8.0 (Laragon)
+- **Thanh toán**: SePay ([docs.sepay.vn](https://docs.sepay.vn)) — ký form HMAC-SHA256, IPN + webhook biến động số dư
+- **Email**: SMTP (MailHog trên Laragon) hoặc ghi file `App_Data/emails` khi chưa cấu hình
+- **Bảo mật**: BCrypt (work factor 11), token reset mật khẩu SHA-256 + hết hạn 30 phút, chống brute-force, `[ValidateAntiForgeryToken]` toàn bộ POST
+- **Test**: xunit 2.9 trên `net48` (chạy trực tiếp trên assembly thật của app)
 
 ---
 
-## 📂 Cấu Trúc Dự Án (Project Structure)
+## 3. Cấu trúc dự án
+
 ```text
-d:\phuoc-mat-lon/
-├── FlowerShop.sln                 # File Solution Visual Studio 2019 / 2022
+phuoc-mat-lon/
+├── FlowerShop.sln
 ├── FlowerShop/
-│   ├── FlowerShop.csproj          # Project file cấu hình MVC5, EF6, MySQL
-│   ├── Web.config                 # Chuỗi kết nối MySQL, cấu hình VNPay, Stripe
-│   ├── Global.asax / .cs          # Khởi động ứng dụng, nạp DbInitializer
 │   ├── App_Data/
-│   │   └── FlowerShop_Database_Dump.sql # File SQL sẵn sàng import 1-click
-│   ├── App_Start/                 # RouteConfig, FilterConfig
-│   ├── Areas/
-│   │   └── Admin/                 # Khu vực quản trị cửa hàng
-│   │       ├── Controllers/       # Dashboard, Order, Product, Voucher, Settings
-│   │       └── Views/             # Quản lý đơn, in phiếu giao hoa ẩn giá, duyệt ảnh
-│   ├── Controllers/               # Home, Product, CustomBouquet, Cart, Checkout, Payment, OrderTracking, Chatbot
-│   ├── DAL/                       # FlowerShopDbContext, SeedData (25+ mẫu hoa)
-│   ├── Models/                    # Entities (Product, Order, Addon...) & ViewModels
-│   ├── Services/                  # VNPay, Stripe, VietQR, AI Chatbot, Cart
-│   ├── Content/css/               # style.css (Storefront), admin.css, chatbot.css
-│   ├── Scripts/js/                # main.js, cart.js, chatbot.js, custom-bouquet.js
-│   └── Views/                     # Storefront Razor Views (Home, Product, Cart, Checkout, Tracking...)
-└── packages/                      # Thư viện NuGet đã restore sẵn sàng
+│   │   └── FlowerShop_Database_Dump.sql   # 15 bảng + 43 index + seed đầy đủ
+│   ├── Areas/Admin/
+│   │   ├── Controllers/                   # Dashboard, Order, Product, Voucher, Review, Settings
+│   │   ├── Filters/AdminAuthorizeAttribute.cs
+│   │   └── Views/
+│   ├── Controllers/                       # Home, Product, Cart, Checkout, Payment(SePay), OrderTracking, Account, Chatbot, CustomBouquet
+│   ├── DAL/
+│   │   ├── FlowerShopDbContext.cs         # lazy loading OFF, bỏ tracking cho truy vấn đọc
+│   │   ├── FlowerShopDbInitializer.cs     # seed idempotent
+│   │   ├── SeedCatalog.cs                 # 16 sản phẩm mở rộng + review + đơn demo
+│   │   ├── DbIndexProvisioner.cs          # catalog 43 index + EnsureIndexes (idempotent)
+│   │   └── DbContextAdapter.cs            # UPDATE kho/voucher nguyên tử
+│   ├── Helpers/SlugHelper.cs
+│   ├── Models/{Entities,ViewModels}
+│   ├── Services/
+│   │   ├── AI/            ChatbotService + ChatbotIntentDetector
+│   │   ├── Cart/          CartService (Session)
+│   │   ├── Email/         IEmailService, SmtpEmailService, FileEmailService, EmailTemplates
+│   │   ├── Logging/       AppLogger
+│   │   ├── Orders/        OrderCodeGenerator, StockService, VoucherUsageService,
+│   │   │                  OrderNotificationService, BouquetBuilderService
+│   │   ├── Pricing/       PricingService (nguồn sự thật duy nhất cho mọi phép tính tiền)
+│   │   ├── Security/      PasswordService, PasswordResetService, PasswordResetTokenFactory, LoginThrottle
+│   │   ├── Upload/        FileUploadService
+│   │   └── SePay/         SePayOptions, SePaySignature, SePayPaymentService, SePayModels
+│   ├── Scripts/js/        csrf.js, cart.js, auth.js, main.js, chatbot.js, custom-bouquet.js
+│   └── Views/
+└── FlowerShop.Tests/                      # 226 unit test (xunit, net48)
 ```
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Chạy Dự Án
+## 4. Cài đặt trên Laragon
 
-### 1. Cơ sở dữ liệu MySQL
-1. Mở công cụ quản lý MySQL của bạn (**phpMyAdmin**, **MySQL Workbench**, **HeidiSQL** hoặc **DBeaver**).
-2. Tạo cơ sở dữ liệu `FlowerShopDb` và import file:
-   👉 `FlowerShop/App_Data/FlowerShop_Database_Dump.sql`
-3. Mở file `FlowerShop/Web.config` và kiểm tra lại chuỗi kết nối:
+Chi tiết từng bước: **[Docs/SETUP-LARAGON.md](Docs/SETUP-LARAGON.md)**
+
+Tóm tắt:
+
+1. Laragon → **Database → MySQL → Start**.
+2. Mở HeidiSQL/phpMyAdmin, chạy **toàn bộ** `FlowerShop/App_Data/FlowerShop_Database_Dump.sql`.
+3. Kiểm tra `FlowerShop/Web.config`:
    ```xml
-   <add name="FlowerShopConnectionString" 
-        connectionString="server=localhost;port=3306;database=FlowerShopDb;uid=root;password=your_password;CharSet=utf8mb4;SslMode=none;" 
+   <add name="FlowerShopConnectionString"
+        connectionString="server=localhost;port=3306;database=FlowerShopDb;uid=root;password=;CharSet=utf8mb4;SslMode=none;AllowUserVariables=True;"
         providerName="MySql.Data.MySqlClient" />
    ```
-*(Lưu ý: Hệ thống cũng có sẵn `FlowerShopDbInitializer` tự động sinh bảng và dữ liệu mẫu nếu kết nối với database trống).*
+4. Mở `FlowerShop.sln` bằng Visual Studio 2022 → F5 (IIS Express).
+5. (Tuỳ chọn) Laragon → MailHog để nhận email thật, rồi điền `Smtp:Host`/`Smtp:Port` trong Web.config hoặc trang **Admin → Cấu hình**.
 
-### 2. Mở & Chạy Dự Án Bằng Visual Studio
-1. Nhấp đúp vào file `FlowerShop.sln` để mở trong **Visual Studio 2019 / 2022**.
-2. Nhấn phím **F5** hoặc nút **IIS Express (Google Chrome)** trên thanh công cụ.
-3. Trình duyệt sẽ tự động mở trang chủ website tại địa chỉ `http://localhost:...`.
+### Tài khoản mặc định
 
-### 3. Tài Khoản Quản Trị (Admin Portal)
-- Đường dẫn quản trị: `http://localhost:.../Admin/Dashboard`
-- Tài khoản mẫu: `admin`
-- Mật khẩu: `Admin@123`
+| Vai trò | Tài khoản | Mật khẩu |
+|---|---|---|
+| Quản trị | `admin` | `Admin@123` |
+| Khách | `customer` | `Customer@123` |
+| Nghệ nhân | `florist` | `Florist@123` |
+
+> Mật khẩu seed lưu dạng **SHA-256 hex**; lần đăng nhập đầu tiên hệ thống tự nâng cấp sang **BCrypt**.
 
 ---
 
-## 💳 Hướng Dẫn Kiểm Thử Thanh Toán (Payment Gateways)
-1. **VNPay Sandbox**:
-   - Chọn phương thức *Cổng VNPAY* ở bước thanh toán.
-   - Tại trang VNPay Sandbox, chọn *Ngân hàng NCB*, nhập số thẻ test: `9704198526191432198`, tên `NGUYEN VAN A`, ngày phát hành `07/15`, OTP: `123456`.
-2. **Stripe Thẻ Quốc Tế**:
-   - Chọn *Cổng Quốc Tế Stripe*.
-   - Nhập số thẻ test: `4242 4242 4242 4242`, ngày hết hạn bất kỳ trong tương lai, CVC `123`.
-3. **VietQR**:
-   - Chọn *Quét Mã VietQR*. Hệ thống tự động tạo mã QR chứa đúng số tiền và cú pháp `THANH TOAN FL...`.
+## 5. Thanh toán
+
+**SePay** — cấu hình ở **Admin → Cấu hình** hoặc `Web.config` (theo [docs.sepay.vn](https://docs.sepay.vn)):
+
+| Chế độ | Mô tả | Cần khai báo |
+|---|---|---|
+| `gateway` (mặc định) | Chuyển khách sang trang thanh toán SePay (QR ngân hàng, ATM/NAPAS, thẻ quốc tế) | `MerchantId`, `SecretKey`, IPN URL `https://<host>/Payment/Ipn` |
+| `qr` | Hiện QR `qr.sepay.vn` ngay trên site, tự xác nhận khi tiền vào | Ngân hàng + số TK, webhook `https://<host>/Payment/Webhook` |
+
+Luồng xác nhận:
+- `gateway` → SePay gọi **IPN** (`POST /Payment/Ipn`, header `X-Secret-Key`) → đơn chuyển `Paid` + `Confirmed`.
+- `qr` → SePay gọi **webhook biến động số dư** (`POST /Payment/Webhook`) → khớp mã đơn trong `code`/`content` + đúng số tiền → `Paid`.
+- Trang success_url **không** tự tin tưởng: chỉ hiện "thành công" khi DB đã `Paid`, còn lại là trang chờ + polling `/Payment/Status`.
+
+**COD** — đơn tạo xong là chốt, không qua cổng thanh toán.
+
+Quy tắc nghiệp vụ đã cố định:
+- Chỉ `SEPAY` và `COD` là phương thức hợp lệ (có test chặn hồi quy).
+- Voucher: COD trừ lượt ngay khi đặt, SePay trừ khi thanh toán thành công.
+- Đơn thanh toán lỗi → `PaymentStatus = Failed`, khách có thể đặt lại.
+
+---
+
+## 6. Kiểm thử
+
+```powershell
+# Toàn bộ unit test (không cần MySQL)
+dotnet test FlowerShop.Tests\FlowerShop.Tests.csproj
+
+# Build + kiểm tra Razor toàn bộ view
+& "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" FlowerShop.sln
+& "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\aspnet_compiler.exe" -v / -p FlowerShop -f $env:TEMP\fs-precompile
+```
+
+Phạm vi test: công thức tiền & voucher, mã đơn, tồn kho, băm mật khẩu, token reset, chống brute-force, chữ ký SePay (HMAC-SHA256 base64 vector), IPN/webhook parsing, slug tiếng Việt, intent chatbot, upload ảnh, email + template, logger, và **hợp đồng file SQL dump** (đủ bảng, đủ index, đủ 24 sản phẩm, không còn cổng thanh toán đã gỡ).
+
+---
+
+## 7. Hiệu năng
+
+Xem **[Docs/PERFORMANCE.md](Docs/PERFORMANCE.md)** — 43 index, chính sách `AsNoTracking`, chống N+1, phân trang phía server, cache danh mục 5 phút, và thông số `my.ini` gợi ý cho Laragon.
+
+---
+
+## 8. Việc còn lại (chưa làm trong đợt này)
+
+- CRUD danh mục / dịp / loại hoa / addon / thiệp trong Admin (hiện phải sửa DB).
+- Quản lý người dùng & phân quyền Florist/Staff (Role đã có, UI chưa).
+- Huỷ đơn phía khách + hoàn tiền tự động.
+- Trang "Đơn hàng của tôi" / Profile / sổ địa chỉ.
+- Form liên hệ thật (hiện chỉ hiện thông báo, không lưu DB, không gửi mail).
+- SEO: meta description, Open Graph, JSON-LD, sitemap.
+- Chatbot gọi LLM thật (hiện là rule-based có unit test).
